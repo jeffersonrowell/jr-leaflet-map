@@ -14,9 +14,8 @@
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-var map = L.map('map').setView([32.255, -90.135], 10);
+var map = L.map('map').setView([32.7, -88.5], 6);  // wider MS-AL region
 
-// Basemap layers
 var streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
 }).addTo(map);
@@ -25,38 +24,52 @@ var satellite = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', 
     attribution: '© OpenTopoMap contributors'
 });
 
-// Load and style layers
-var contours, floodmap, sites;
+var contours, floodway, broadhead, holmes, nickles, combined;
 
 Promise.all([
     fetch('geojson/contours_clipped_4326.geojson').then(res => res.json()),
     fetch('geojson/floodway_4326.geojson').then(res => res.json()),
-    fetch('geojson/broadhead.geojson').then(res => res.json())
-]).then(([contoursData, floodmapData, sitesData]) => {
+    fetch('geojson/broadhead.geojson').then(res => res.json()),
+    fetch('geojson/holmes.geojson').then(res => res.json()),
+    fetch('geojson/nickles.geojson').then(res => res.json()),
+    fetch('geojson/nickles_broadhead_combined.geojson').then(res => res.json())
+]).then(([contoursData, floodwayData, broadheadData, holmesData, nicklesData, combinedData]) => {
 
     contours = L.geoJSON(contoursData, {
-        style: {
-            color: '#78866b',  // sage/olive green
-            weight: 1
-        }
-    }).addTo(map);
+        style: { color: '#78866b', weight: 1 }
+    });
 
-    floodmap = L.geoJSON(floodmapData, {
-        style: {
-            color: '#2b5d85',  // marine blue
-            fillOpacity: 0.4
-        }
-    }).addTo(map);
+    floodway = L.geoJSON(floodwayData, {
+        style: { color: '#2b5d85', fillOpacity: 0.4 }
+    });
 
-    sites = L.geoJSON(sitesData, {
-        style: {
-            color: '#d4af37',  // mustard
-            fillOpacity: 0.5
-        },
-        onEachFeature: function (feature, layer) {
-            layer.bindPopup(feature.properties.name || "Site");
+    broadhead = L.geoJSON(broadheadData, {
+        style: { color: '#d4af37', fillOpacity: 0.5 },
+        onEachFeature: (feature, layer) => {
+            layer.bindPopup(feature.properties.name || "Broadhead Site");
         }
-    }).addTo(map);
+    });
+
+    holmes = L.geoJSON(holmesData, {
+        style: { color: '#ff7f0e', fillOpacity: 0.5 },
+        onEachFeature: (feature, layer) => {
+            layer.bindPopup(feature.properties.name || "Holmes Site");
+        }
+    });
+
+    nickles = L.geoJSON(nicklesData, {
+        style: { color: '#9467bd', fillOpacity: 0.5 },
+        onEachFeature: (feature, layer) => {
+            layer.bindPopup(feature.properties.name || "Nickles Site");
+        }
+    });
+
+    combined = L.geoJSON(combinedData, {
+        style: { color: '#17becf', fillOpacity: 0.5 },
+        onEachFeature: (feature, layer) => {
+            layer.bindPopup(feature.properties.name || "Nickles + Broadhead Combined");
+        }
+    });
 
     var baseMaps = {
         "Streets": streets,
@@ -65,11 +78,22 @@ Promise.all([
 
     var overlayMaps = {
         "Contours": contours,
-        "Floodway": floodmap,
-        "Broadhead Site": sites
+        "Floodway": floodway,
+        "Broadhead Site": broadhead,
+        "Holmes Site": holmes,
+        "Nickles Site": nickles,
+        "Nickles + Broadhead Combined": combined
     };
 
-    L.control.layers(baseMaps, overlayMaps).addTo(map);
+    // Add layers but keep them off initially so toggles appear
+    contours.addTo(map);
+    floodway.addTo(map);
+    broadhead.addTo(map);
+    holmes.addTo(map);
+    nickles.addTo(map);
+    combined.addTo(map);
+
+    L.control.layers(baseMaps, overlayMaps, { collapsed: false }).addTo(map);
 });
 </script>
 </body>
