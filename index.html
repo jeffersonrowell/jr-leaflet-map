@@ -18,7 +18,7 @@
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-var map = L.map('map').setView([32.25, -88.95], 6.8); // 25 mi west, 15 mi south
+var map = L.map('map').setView([32.25, -88.2], 6.8); // 50 mi east
 
 // Basemap layers
 var streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -90,12 +90,12 @@ Promise.all([
     var layerControl = L.control.layers(baseMaps, overlayMaps, { collapsed: true }).addTo(map);
     L.control.scale({ position: 'bottomleft', imperial: true, metric: false }).addTo(map);
 
-    // Show only selected layers on load
+    // Show only specific layers on load
     map.addLayer(nickles);
     map.addLayer(broadhead);
     map.addLayer(holmes);
 
-    // Exclusive layer toggle logic
+    // Exclusive toggle logic
     map.on('overlayadd', function(e) {
         if (e.name === '26.47 ac Rankin') {
             map.removeLayer(nickles);
@@ -106,9 +106,13 @@ Promise.all([
         }
     });
 
-    // Add 2 pins
-    var pin1 = L.marker([32.174586, -90.135014]).addTo(map).bindTooltip("U.S. HW 49 Frontage / 10.39 acres");
-    var pin2 = L.marker([32.260453, -90.144217]).addTo(map).bindTooltip("Crossroads of Mississippi");
+    // Add pins with full info
+    var pin1 = L.marker([32.174586, -90.135014]).addTo(map).bindTooltip(
+        "U.S. HW 49 Frontage<br>10.39 acres of undeveloped commercial land<br>700+ feet frontage on U.S. Hwy 49"
+    );
+    var pin2 = L.marker([32.260453, -90.144217]).addTo(map).bindTooltip(
+        "Crossroads of Mississippi<br>Two adjacent tracts totaling 26.47 acres (9.9 acres & 16.57 acres)<br>Direct access to I-20, I-55, Hwy 49 & Hwy 80"
+    );
 
     var pins = [pin1, pin2];
     map.on('zoomend', () => {
