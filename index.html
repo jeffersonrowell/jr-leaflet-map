@@ -15,7 +15,7 @@
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-var map = L.map('map').setView([32.4, -88.5], 6.8);
+var map = L.map('map').setView([32.4, -87.5], 6.8); // shifted east
 
 // Basemap layers
 var streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -30,9 +30,6 @@ var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/service
 var topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenTopoMap contributors'
 });
-
-// Marker group
-var markers = [];
 
 // Load GeoJSON layers
 Promise.all([
@@ -75,22 +72,6 @@ Promise.all([
         }
     }).addTo(map);
 
-    // Add simple center markers (example coordinates — adjust as needed)
-    var broadheadMarker = L.marker([32.4, -88.5]).addTo(map).bindTooltip("16.57 A Rankin");
-    var holmesMarker = L.marker([32.5, -88.6]).addTo(map).bindTooltip("10.39 A Rankin");
-    var nicklesMarker = L.marker([32.6, -88.7]).addTo(map).bindTooltip("9.9 A Rankin");
-    var combinedMarker = L.marker([32.45, -88.55]).addTo(map).bindTooltip("26.47 A Rankin");
-
-    markers.push(broadheadMarker, holmesMarker, nicklesMarker, combinedMarker);
-
-    map.on('zoomend', () => {
-        const zoom = map.getZoom();
-        markers.forEach(marker => {
-            if (zoom >= 12) map.removeLayer(marker);
-            else map.addLayer(marker);
-        });
-    });
-
     var baseMaps = {
         "Streets": streets,
         "Satellite": satellite,
@@ -98,15 +79,30 @@ Promise.all([
     };
 
     var overlayMaps = {
-        "Floodway": floodway,
-        "16.57 A Rankin": broadhead,
-        "10.39 A Rankin": holmes,
-        "9.9 A Rankin": nickles,
-        "26.47 A Rankin": combined
+        "9.9 ac Rankin": nickles,
+        "16.57 ac Rankin": broadhead,
+        "26.47 ac Rankin": combined,
+        "10.39 ac Rankin": holmes,
+        "Floodway": floodway
     };
 
-    L.control.layers(baseMaps, overlayMaps, { collapsed: false }).addTo(map);
-    L.control.scale().addTo(map);
+    var layerControl = L.control.layers(baseMaps, overlayMaps, { collapsed: false }).addTo(map);
+    L.control.scale({ position: 'bottomleft' }).addTo(map);
+
+    // Make 9.9 + 16.57 exclusive from 26.47
+    map.on('overlayadd', function(e) {
+        if (e.name === '26.47 ac Rankin') {
+            map.removeLayer(nickles);
+            map.removeLayer(broadhead);
+        }
+        if (e.name === '9.9 ac Rankin' || e.name === '16.57 ac Rankin') {
+            map.removeLayer(combined);
+        }
+    });
+
+    // Add two specific pins
+    var pin1 = L.marker([32.174586, -90.135014]).addTo(map).bindTooltip("U.S. HW 49 Frontage / 10.39 acres");
+    var pin2 = L.marker([32.260453, -90.144217]).addTo(map).bindTooltip("Crossroads of Mississippi");
 });
 </script>
 </body>
