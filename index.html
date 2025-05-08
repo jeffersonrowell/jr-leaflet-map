@@ -98,20 +98,20 @@ Promise.all([
     // Exclusive toggle logic
     map.on('overlayadd', function(e) {
         if (e.name === '26.47 ac Rankin') {
-            map.removeLayer(nickles);
-            map.removeLayer(broadhead);
+            if (map.hasLayer(nickles)) map.removeLayer(nickles);
+            if (map.hasLayer(broadhead)) map.removeLayer(broadhead);
         }
         if (e.name === '9.9 ac Rankin' || e.name === '16.57 ac Rankin') {
-            map.removeLayer(combined);
+            if (map.hasLayer(combined)) map.removeLayer(combined);
         }
     });
 
-    // Add pins with full info
+    // Add pins with underlined titles + bullets
     var pin1 = L.marker([32.174586, -90.135014]).addTo(map).bindTooltip(
-        "U.S. HW 49 Frontage<br>10.39 acres of undeveloped commercial land<br>700+ feet frontage on U.S. Hwy 49"
+        "<u>U.S. HW 49 Frontage</u><br>&bull; 10.39 acres of undeveloped commercial land<br>&bull; 700+ feet frontage on U.S. Hwy 49"
     );
     var pin2 = L.marker([32.260453, -90.144217]).addTo(map).bindTooltip(
-        "Crossroads of Mississippi<br>Two adjacent tracts totaling 26.47 acres (9.9 acres & 16.57 acres)<br>Direct access to I-20, I-55, Hwy 49 & Hwy 80"
+        "<u>Crossroads of Mississippi</u><br>&bull; Two adjacent tracts totaling 26.47 acres (9.9 acres & 16.57 acres)<br>&bull; Direct access to I-20, I-55, Hwy 49 & Hwy 80"
     );
 
     var pins = [pin1, pin2];
@@ -129,15 +129,19 @@ function showInfo(site) {
     var infoDiv = document.getElementById('site-info');
     if (site === 'crossroads') {
         infoDiv.innerHTML = `
-            <h2><a href='https://jeffersonrowellproperties.com/Crossroads-of-MS-1' target='_blank'>Crossroads of Mississippi</a></h2>
-            <p>Two adjacent tracts totaling 26.47 acres (9.9 acres & 16.57 acres)</p>
-            <p>Direct access to I-20, I-55, Hwy 49 & Hwy 80</p>
+            <h2><u>Crossroads of Mississippi</u></h2>
+            <ul>
+                <li>Two adjacent tracts totaling 26.47 acres (9.9 acres & 16.57 acres)</li>
+                <li>Direct access to I-20, I-55, Hwy 49 & Hwy 80</li>
+            </ul>
         `;
     } else if (site === 'hw49') {
         infoDiv.innerHTML = `
-            <h2><a href='https://jeffersonrowellproperties.com/HW-49-Florence-1' target='_blank'>U.S. HW 49 Frontage</a></h2>
-            <p>10.39 acres of undeveloped commercial land</p>
-            <p>700+ feet frontage on U.S. Hwy 49</p>
+            <h2><u>U.S. HW 49 Frontage</u></h2>
+            <ul>
+                <li>10.39 acres of undeveloped commercial land</li>
+                <li>700+ feet frontage on U.S. Hwy 49</li>
+            </ul>
         `;
     }
     window.scrollTo({
