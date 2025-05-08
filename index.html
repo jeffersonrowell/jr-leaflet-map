@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
-        #map { height: 100vh; width: 100%; }
+        #map { height: 100vh; width: 100%; margin-left: 10px; }
+        .leaflet-control-attribution { display: none; }
     </style>
 </head>
 <body>
@@ -30,9 +31,10 @@ var topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenTopoMap contributors'
 });
 
-// Declare overlay variables
-let floodway, broadhead, holmes, nickles, combined;
+// Marker group
+var markers = [];
 
+// Load GeoJSON layers
 Promise.all([
     fetch('geojson/mississippi/rankin/floodway_4326.geojson').then(res => res.json()),
     fetch('geojson/mississippi/rankin/broadhead.geojson').then(res => res.json()),
@@ -41,37 +43,53 @@ Promise.all([
     fetch('geojson/mississippi/rankin/nickles_broadhead.geojson').then(res => res.json())
 ]).then(([floodwayData, broadheadData, holmesData, nicklesData, combinedData]) => {
 
-    floodway = L.geoJSON(floodwayData, {
-        style: { color: '#2b5d85', fillOpacity: 0.4 }
+    var floodway = L.geoJSON(floodwayData, {
+        style: { color: '#3f93ba', fillOpacity: 0.4, stroke: false }
     }).addTo(map);
 
-    broadhead = L.geoJSON(broadheadData, {
+    var broadhead = L.geoJSON(broadheadData, {
         style: { color: '#d4af37', fillOpacity: 0.5 },
         onEachFeature: (feature, layer) => {
-            layer.bindPopup("Broadhead Site");
+            layer.bindPopup("<b>16.57 A Rankin</b><br><a href='https://example.com' target='_blank'>More info</a>");
         }
     }).addTo(map);
 
-    holmes = L.geoJSON(holmesData, {
-        style: { color: '#ff7f0e', fillOpacity: 0.5 },
+    var holmes = L.geoJSON(holmesData, {
+        style: { color: '#d4af37', fillOpacity: 0.5 },
         onEachFeature: (feature, layer) => {
-            layer.bindPopup("Holmes Site");
+            layer.bindPopup("<b>10.39 A Rankin</b><br><a href='https://example.com' target='_blank'>More info</a>");
         }
     }).addTo(map);
 
-    nickles = L.geoJSON(nicklesData, {
-        style: { color: '#9467bd', fillOpacity: 0.5 },
+    var nickles = L.geoJSON(nicklesData, {
+        style: { color: '#d4af37', fillOpacity: 0.5 },
         onEachFeature: (feature, layer) => {
-            layer.bindPopup("Nickles Site");
+            layer.bindPopup("<b>9.9 A Rankin</b><br><a href='https://example.com' target='_blank'>More info</a>");
         }
     }).addTo(map);
 
-    combined = L.geoJSON(combinedData, {
-        style: { color: '#17becf', fillOpacity: 0.5 },
+    var combined = L.geoJSON(combinedData, {
+        style: { color: '#d4af37', fillOpacity: 0.5 },
         onEachFeature: (feature, layer) => {
-            layer.bindPopup("Nickles + Broadhead Combined");
+            layer.bindPopup("<b>26.47 A Rankin</b><br><a href='https://example.com' target='_blank'>More info</a>");
         }
     }).addTo(map);
+
+    // Add simple center markers (example coordinates — adjust as needed)
+    var broadheadMarker = L.marker([32.4, -88.5]).addTo(map).bindTooltip("16.57 A Rankin");
+    var holmesMarker = L.marker([32.5, -88.6]).addTo(map).bindTooltip("10.39 A Rankin");
+    var nicklesMarker = L.marker([32.6, -88.7]).addTo(map).bindTooltip("9.9 A Rankin");
+    var combinedMarker = L.marker([32.45, -88.55]).addTo(map).bindTooltip("26.47 A Rankin");
+
+    markers.push(broadheadMarker, holmesMarker, nicklesMarker, combinedMarker);
+
+    map.on('zoomend', () => {
+        const zoom = map.getZoom();
+        markers.forEach(marker => {
+            if (zoom >= 12) map.removeLayer(marker);
+            else map.addLayer(marker);
+        });
+    });
 
     var baseMaps = {
         "Streets": streets,
@@ -81,14 +99,16 @@ Promise.all([
 
     var overlayMaps = {
         "Floodway": floodway,
-        "Broadhead Site": broadhead,
-        "Holmes Site": holmes,
-        "Nickles Site": nickles,
-        "Nickles + Broadhead Combined": combined
+        "16.57 A Rankin": broadhead,
+        "10.39 A Rankin": holmes,
+        "9.9 A Rankin": nickles,
+        "26.47 A Rankin": combined
     };
 
     L.control.layers(baseMaps, overlayMaps, { collapsed: false }).addTo(map);
+    L.control.scale().addTo(map);
 });
 </script>
 </body>
 </html>
+
