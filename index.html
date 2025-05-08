@@ -8,6 +8,7 @@
     <style>
         #map { height: 100vh; width: 100%; margin-left: 10px; }
         .leaflet-control-attribution { display: none; }
+        .leaflet-bottom.leaflet-left { margin-bottom: 50px; } /* lift scale legend up */
     </style>
 </head>
 <body>
@@ -15,7 +16,7 @@
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-var map = L.map('map').setView([32.4, -87.5], 6.8); // shifted east
+var map = L.map('map').setView([32.548261, -88.248083], 6.8); // center on requested coordinates
 
 // Basemap layers
 var streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -31,7 +32,6 @@ var topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenTopoMap contributors'
 });
 
-// Load GeoJSON layers
 Promise.all([
     fetch('geojson/mississippi/rankin/floodway_4326.geojson').then(res => res.json()),
     fetch('geojson/mississippi/rankin/broadhead.geojson').then(res => res.json()),
@@ -49,28 +49,28 @@ Promise.all([
         onEachFeature: (feature, layer) => {
             layer.bindPopup("<b>16.57 A Rankin</b><br><a href='https://example.com' target='_blank'>More info</a>");
         }
-    }).addTo(map);
+    });
 
     var holmes = L.geoJSON(holmesData, {
         style: { color: '#d4af37', fillOpacity: 0.5 },
         onEachFeature: (feature, layer) => {
             layer.bindPopup("<b>10.39 A Rankin</b><br><a href='https://example.com' target='_blank'>More info</a>");
         }
-    }).addTo(map);
+    });
 
     var nickles = L.geoJSON(nicklesData, {
         style: { color: '#d4af37', fillOpacity: 0.5 },
         onEachFeature: (feature, layer) => {
             layer.bindPopup("<b>9.9 A Rankin</b><br><a href='https://example.com' target='_blank'>More info</a>");
         }
-    }).addTo(map);
+    });
 
     var combined = L.geoJSON(combinedData, {
         style: { color: '#d4af37', fillOpacity: 0.5 },
         onEachFeature: (feature, layer) => {
             layer.bindPopup("<b>26.47 A Rankin</b><br><a href='https://example.com' target='_blank'>More info</a>");
         }
-    }).addTo(map);
+    });
 
     var baseMaps = {
         "Streets": streets,
@@ -86,10 +86,10 @@ Promise.all([
         "Floodway": floodway
     };
 
-    var layerControl = L.control.layers(baseMaps, overlayMaps, { collapsed: false }).addTo(map);
-    L.control.scale({ position: 'bottomleft' }).addTo(map);
+    var layerControl = L.control.layers(baseMaps, overlayMaps, { collapsed: true }).addTo(map);
+    L.control.scale({ position: 'bottomleft', imperial: false }).addTo(map);
 
-    // Make 9.9 + 16.57 exclusive from 26.47
+    // Layer exclusivity logic
     map.on('overlayadd', function(e) {
         if (e.name === '26.47 ac Rankin') {
             map.removeLayer(nickles);
@@ -100,9 +100,19 @@ Promise.all([
         }
     });
 
-    // Add two specific pins
+    // Add 2 pins
     var pin1 = L.marker([32.174586, -90.135014]).addTo(map).bindTooltip("U.S. HW 49 Frontage / 10.39 acres");
     var pin2 = L.marker([32.260453, -90.144217]).addTo(map).bindTooltip("Crossroads of Mississippi");
+
+    var pins = [pin1, pin2];
+
+    map.on('zoomend', () => {
+        const zoom = map.getZoom();
+        pins.forEach(pin => {
+            if (zoom >= 12) map.removeLayer(pin);
+            else map.addLayer(pin);
+        });
+    });
 });
 </script>
 </body>
