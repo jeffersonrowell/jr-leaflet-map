@@ -26,21 +26,14 @@ var satellite = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', 
     attribution: '© OpenTopoMap'
 });
 
-// Overlay layers (empty groups for now)
-var contours = L.geoJSON(null);
-var floodmap = L.geoJSON(null);
-var sites = L.geoJSON(null, {
-    onEachFeature: function (feature, layer) {
-        layer.bindPopup(feature.properties.name || "Site");
-    }
-});
+// Declare variables to hold layers
+var contours, floodmap, sites;
 
-// Load GeoJSON files
 // Contours → sage/olive green
 fetch('geojson/contours.geojson')
     .then(response => response.json())
     .then(data => {
-        L.geoJSON(data, {
+        contours = L.geoJSON(data, {
             style: {
                 color: '#78866b',  // sage/olive green
                 weight: 1
@@ -52,7 +45,7 @@ fetch('geojson/contours.geojson')
 fetch('geojson/floodmap.geojson')
     .then(response => response.json())
     .then(data => {
-        L.geoJSON(data, {
+        floodmap = L.geoJSON(data, {
             style: {
                 color: '#2b5d85',  // marine blue
                 fillOpacity: 0.4
@@ -64,7 +57,7 @@ fetch('geojson/floodmap.geojson')
 fetch('geojson/sites.geojson')
     .then(response => response.json())
     .then(data => {
-        L.geoJSON(data, {
+        sites = L.geoJSON(data, {
             style: {
                 color: '#d4af37',  // mustard
                 fillOpacity: 0.5
