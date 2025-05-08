@@ -9,12 +9,10 @@
         #map { height: 100vh; width: 100%; margin-left: 10px; }
         .leaflet-control-attribution { display: none; }
         .leaflet-bottom.leaflet-left { margin-bottom: 10px; }
-        #site-info { padding: 20px; background: #f9f9f9; font-family: sans-serif; }
     </style>
 </head>
 <body>
 <div id="map"></div>
-<div id="site-info"></div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
@@ -48,28 +46,28 @@ Promise.all([
     var broadhead = L.geoJSON(broadheadData, {
         style: { color: '#d4af37', fillOpacity: 0.2 },
         onEachFeature: (feature, layer) => {
-            layer.bindPopup("<b><a href='#' onclick='showInfo(\"crossroads\")'>Crossroads of Mississippi</a></b>");
+            layer.bindPopup("<b><a href='https://jeffersonrowellproperties.com' target='_blank'>Crossroads of Mississippi</a></b><br>&bull; Two adjacent tracts totaling 26.47 acres (9.9 acres & 16.57 acres)<br>&bull; Direct access to I-20, I-55, Hwy 49 & Hwy 80");
         }
     });
 
     var holmes = L.geoJSON(holmesData, {
         style: { color: '#d4af37', fillOpacity: 0.2 },
         onEachFeature: (feature, layer) => {
-            layer.bindPopup("<b><a href='#' onclick='showInfo(\"hw49\")'>U.S. HW 49 Frontage</a></b>");
+            layer.bindPopup("<b><a href='https://jeffersonrowellproperties.com' target='_blank'>U.S. HW 49 Frontage</a></b><br>&bull; 10.39 acres of undeveloped commercial land<br>&bull; 700+ feet frontage on U.S. Hwy 49");
         }
     });
 
     var nickles = L.geoJSON(nicklesData, {
         style: { color: '#d4af37', fillOpacity: 0.2 },
         onEachFeature: (feature, layer) => {
-            layer.bindPopup("<b><a href='#' onclick='showInfo(\"crossroads\")'>Crossroads of Mississippi</a></b>");
+            layer.bindPopup("<b><a href='https://jeffersonrowellproperties.com' target='_blank'>Crossroads of Mississippi</a></b><br>&bull; Two adjacent tracts totaling 26.47 acres (9.9 acres & 16.57 acres)<br>&bull; Direct access to I-20, I-55, Hwy 49 & Hwy 80");
         }
     });
 
     var combined = L.geoJSON(combinedData, {
         style: { color: '#d4af37', fillOpacity: 0.2 },
         onEachFeature: (feature, layer) => {
-            layer.bindPopup("<b><a href='#' onclick='showInfo(\"crossroads\")'>Crossroads of Mississippi</a></b>");
+            layer.bindPopup("<b><a href='https://jeffersonrowellproperties.com' target='_blank'>Crossroads of Mississippi</a></b><br>&bull; Two adjacent tracts totaling 26.47 acres (9.9 acres & 16.57 acres)<br>&bull; Direct access to I-20, I-55, Hwy 49 & Hwy 80");
         }
     });
 
@@ -108,10 +106,10 @@ Promise.all([
 
     // Add pins with underlined titles + bullets
     var pin1 = L.marker([32.174586, -90.135014]).addTo(map).bindTooltip(
-        "<u>U.S. HW 49 Frontage</u><br>&bull; 10.39 acres of undeveloped commercial land<br>&bull; 700+ feet frontage on U.S. Hwy 49"
+        "<u><a href='https://jeffersonrowellproperties.com' target='_blank'>U.S. HW 49 Frontage</a></u><br>&bull; 10.39 acres of undeveloped commercial land<br>&bull; 700+ feet frontage on U.S. Hwy 49"
     );
     var pin2 = L.marker([32.260453, -90.144217]).addTo(map).bindTooltip(
-        "<u>Crossroads of Mississippi</u><br>&bull; Two adjacent tracts totaling 26.47 acres (9.9 acres & 16.57 acres)<br>&bull; Direct access to I-20, I-55, Hwy 49 & Hwy 80"
+        "<u><a href='https://jeffersonrowellproperties.com' target='_blank'>Crossroads of Mississippi</a></u><br>&bull; Two adjacent tracts totaling 26.47 acres (9.9 acres & 16.57 acres)<br>&bull; Direct access to I-20, I-55, Hwy 49 & Hwy 80"
     );
 
     var pins = [pin1, pin2];
@@ -123,32 +121,7 @@ Promise.all([
         });
     });
 });
-
-// Show site info below map
-function showInfo(site) {
-    var infoDiv = document.getElementById('site-info');
-    if (site === 'crossroads') {
-        infoDiv.innerHTML = `
-            <h2><u>Crossroads of Mississippi</u></h2>
-            <ul>
-                <li>Two adjacent tracts totaling 26.47 acres (9.9 acres & 16.57 acres)</li>
-                <li>Direct access to I-20, I-55, Hwy 49 & Hwy 80</li>
-            </ul>
-        `;
-    } else if (site === 'hw49') {
-        infoDiv.innerHTML = `
-            <h2><u>U.S. HW 49 Frontage</u></h2>
-            <ul>
-                <li>10.39 acres of undeveloped commercial land</li>
-                <li>700+ feet frontage on U.S. Hwy 49</li>
-            </ul>
-        `;
-    }
-    window.scrollTo({
-        top: document.getElementById('site-info').offsetTop - 20,
-        behavior: 'smooth'
-    });
-}
 </script>
 </body>
 </html>
+
