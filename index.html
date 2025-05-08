@@ -9,19 +9,25 @@
         #map { height: 100vh; width: 100%; margin-left: 10px; }
         .leaflet-control-attribution { display: none; }
         .leaflet-bottom.leaflet-left { margin-bottom: 10px; }
+        #site-info { padding: 20px; background: #f9f9f9; font-family: sans-serif; }
     </style>
 </head>
 <body>
 <div id="map"></div>
+<div id="site-info"></div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-var map = L.map('map').setView([32.548261, -87.5], 6.8); // shifted ~50 miles east
+var map = L.map('map').setView([32.25, -88.95], 6.8); // 25 mi west, 15 mi south
 
 // Basemap layers
 var streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
 }).addTo(map);
+
+var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles © Esri & contributors'
+});
 
 var esriTopo = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
     attribution: 'Tiles © Esri & contributors'
@@ -42,33 +48,34 @@ Promise.all([
     var broadhead = L.geoJSON(broadheadData, {
         style: { color: '#d4af37', fillOpacity: 0.2 },
         onEachFeature: (feature, layer) => {
-            layer.bindPopup("<b><a href='https://jeffersonrowellproperties.com/Crossroads-of-MS-1' target='_blank'>Crossroads of Mississippi</a></b><br>* Two adjacent tracts totaling 26.47 acres (9.9 acres & 16.57 acres)<br>* Direct access to I-20, I-55, Hwy 49 & Hwy 80.");
+            layer.bindPopup("<b><a href='#' onclick='showInfo(\"crossroads\")'>Crossroads of Mississippi</a></b>");
         }
-    }).addTo(map);
+    });
 
     var holmes = L.geoJSON(holmesData, {
         style: { color: '#d4af37', fillOpacity: 0.2 },
         onEachFeature: (feature, layer) => {
-            layer.bindPopup("<b><a href='https://jeffersonrowellproperties.com/HW-49-Florence-1' target='_blank'>U.S. HW 49 Frontage</a></b><br>* 10.39 acres of undeveloped commercial land<br>* 700+ feet frontage on U.S. Hwy 49.");
+            layer.bindPopup("<b><a href='#' onclick='showInfo(\"hw49\")'>U.S. HW 49 Frontage</a></b>");
         }
-    }).addTo(map);
+    });
 
     var nickles = L.geoJSON(nicklesData, {
         style: { color: '#d4af37', fillOpacity: 0.2 },
         onEachFeature: (feature, layer) => {
-            layer.bindPopup("<b><a href='https://jeffersonrowellproperties.com/Crossroads-of-MS-1' target='_blank'>Crossroads of Mississippi</a></b><br>* Two adjacent tracts totaling 26.47 acres (9.9 acres & 16.57 acres)<br>* Direct access to I-20, I-55, Hwy 49 & Hwy 80.");
+            layer.bindPopup("<b><a href='#' onclick='showInfo(\"crossroads\")'>Crossroads of Mississippi</a></b>");
         }
-    }).addTo(map);
+    });
 
     var combined = L.geoJSON(combinedData, {
         style: { color: '#d4af37', fillOpacity: 0.2 },
         onEachFeature: (feature, layer) => {
-            layer.bindPopup("<b><a href='https://jeffersonrowellproperties.com/Crossroads-of-MS-1' target='_blank'>Crossroads of Mississippi</a></b><br>* Two adjacent tracts totaling 26.47 acres (9.9 acres & 16.57 acres)<br>* Direct access to I-20, I-55, Hwy 49 & Hwy 80.");
+            layer.bindPopup("<b><a href='#' onclick='showInfo(\"crossroads\")'>Crossroads of Mississippi</a></b>");
         }
     });
 
     var baseMaps = {
         "Streets": streets,
+        "Satellite": satellite,
         "Esri Topo": esriTopo
     };
 
@@ -80,15 +87,15 @@ Promise.all([
         "Floodway": floodway
     };
 
-    var layerControl = L.control.layers(baseMaps, overlayMaps, { collapsed: false }).addTo(map);
+    var layerControl = L.control.layers(baseMaps, overlayMaps, { collapsed: true }).addTo(map);
     L.control.scale({ position: 'bottomleft', imperial: true, metric: false }).addTo(map);
 
-    // Show only specific layers on load
+    // Show only selected layers on load
     map.addLayer(nickles);
     map.addLayer(broadhead);
     map.addLayer(holmes);
 
-    // Layer exclusivity logic
+    // Exclusive layer toggle logic
     map.on('overlayadd', function(e) {
         if (e.name === '26.47 ac Rankin') {
             map.removeLayer(nickles);
@@ -104,7 +111,6 @@ Promise.all([
     var pin2 = L.marker([32.260453, -90.144217]).addTo(map).bindTooltip("Crossroads of Mississippi");
 
     var pins = [pin1, pin2];
-
     map.on('zoomend', () => {
         const zoom = map.getZoom();
         pins.forEach(pin => {
@@ -113,8 +119,28 @@ Promise.all([
         });
     });
 });
+
+// Show site info below map
+function showInfo(site) {
+    var infoDiv = document.getElementById('site-info');
+    if (site === 'crossroads') {
+        infoDiv.innerHTML = `
+            <h2><a href='https://jeffersonrowellproperties.com/Crossroads-of-MS-1' target='_blank'>Crossroads of Mississippi</a></h2>
+            <p>Two adjacent tracts totaling 26.47 acres (9.9 acres & 16.57 acres)</p>
+            <p>Direct access to I-20, I-55, Hwy 49 & Hwy 80</p>
+        `;
+    } else if (site === 'hw49') {
+        infoDiv.innerHTML = `
+            <h2><a href='https://jeffersonrowellproperties.com/HW-49-Florence-1' target='_blank'>U.S. HW 49 Frontage</a></h2>
+            <p>10.39 acres of undeveloped commercial land</p>
+            <p>700+ feet frontage on U.S. Hwy 49</p>
+        `;
+    }
+    window.scrollTo({
+        top: document.getElementById('site-info').offsetTop - 20,
+        behavior: 'smooth'
+    });
+}
 </script>
 </body>
 </html>
-
-
