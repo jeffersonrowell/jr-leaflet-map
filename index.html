@@ -14,10 +14,8 @@
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-// Initialize map
 var map = L.map('map').setView([32.255, -90.135], 10);
 
-// Basemap layers
 var streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap'
 }).addTo(map);
@@ -26,61 +24,51 @@ var satellite = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', 
     attribution: '© OpenTopoMap'
 });
 
-// Declare variables to hold layers
 var contours, floodmap, sites;
 
-// Contours → sage/olive green
-fetch('geojson/contours.geojson')
-    .then(response => response.json())
-    .then(data => {
-        contours = L.geoJSON(data, {
-            style: {
-                color: '#78866b',  // sage/olive green
-                weight: 1
-            }
-        }).addTo(map);
-    });
+Promise.all([
+    fetch('geojson/contours.geojson').then(res => res.json()),
+    fetch('geojson/floodmap.geojson').then(res => res.json()),
+    fetch('geojson/sites.geojson').then(res => res.json())
+]).then(([contoursData, floodmapData, sitesData]) => {
 
-// Floodmap → marine blue
-fetch('geojson/floodmap.geojson')
-    .then(response => response.json())
-    .then(data => {
-        floodmap = L.geoJSON(data, {
-            style: {
-                color: '#2b5d85',  // marine blue
-                fillOpacity: 0.4
-            }
-        }).addTo(map);
-    });
+    contours = L.geoJSON(contoursData, {
+        style: {
+            color: '#78866b',
+            weight: 1
+        }
+    }).addTo(map);
 
-// Sites → semi-transparent mustard
-fetch('geojson/sites.geojson')
-    .then(response => response.json())
-    .then(data => {
-        sites = L.geoJSON(data, {
-            style: {
-                color: '#d4af37',  // mustard
-                fillOpacity: 0.5
-            },
-            onEachFeature: function (feature, layer) {
-                layer.bindPopup(feature.properties.name || "Site");
-            }
-        }).addTo(map);
-    });
+    floodmap = L.geoJSON(floodmapData, {
+        style: {
+            color: '#2b5d85',
+            fillOpacity: 0.4
+        }
+    }).addTo(map);
 
-// Add layer controls
-var baseMaps = {
-    "Streets": streets,
-    "Satellite": satellite
-};
+    sites = L.geoJSON(sitesData, {
+        style: {
+            color: '#d4af37',
+            fillOpacity: 0.5
+        },
+        onEachFeature: function (feature, layer) {
+            layer.bindPopup(feature.properties.name || "Site");
+        }
+    }).addTo(map);
 
-var overlayMaps = {
-    "Contours": contours,
-    "Floodmap": floodmap,
-    "Sites": sites
-};
+    var baseMaps = {
+        "Streets": streets,
+        "Satellite": satellite
+    };
 
-L.control.layers(baseMaps, overlayMaps).addTo(map);
+    var overlayMaps = {
+        "Contours": contours,
+        "Floodmap": floodmap,
+        "Sites": sites
+    };
+
+    L.control.layers(baseMaps, overlayMaps).addTo(map);
+});
 </script>
 </body>
 </html>
