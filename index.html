@@ -8,7 +8,7 @@
     <style>
         #map { height: 100vh; width: 100%; margin-left: 10px; }
         .leaflet-control-attribution { display: none; }
-        .leaflet-bottom.leaflet-left { margin-bottom: 50px; } /* lift scale legend up */
+        .leaflet-bottom.leaflet-left { margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -16,20 +16,15 @@
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-var map = L.map('map').setView([32.548261, -88.248083], 6.8); // center on requested coordinates
+var map = L.map('map').setView([32.548261, -87.5], 6.8); // shifted ~50 miles east
 
 // Basemap layers
 var streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
 }).addTo(map);
 
-var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    attribution: 'Tiles © Esri & contributors',
-    maxZoom: 19
-});
-
-var topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenTopoMap contributors'
+var esriTopo = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles © Esri & contributors'
 });
 
 Promise.all([
@@ -41,41 +36,40 @@ Promise.all([
 ]).then(([floodwayData, broadheadData, holmesData, nicklesData, combinedData]) => {
 
     var floodway = L.geoJSON(floodwayData, {
-        style: { color: '#3f93ba', fillOpacity: 0.4, stroke: false }
-    }).addTo(map);
+        style: { color: '#3f93ba', fillOpacity: 0.2, stroke: false }
+    });
 
     var broadhead = L.geoJSON(broadheadData, {
-        style: { color: '#d4af37', fillOpacity: 0.5 },
+        style: { color: '#d4af37', fillOpacity: 0.2 },
         onEachFeature: (feature, layer) => {
-            layer.bindPopup("<b>16.57 A Rankin</b><br><a href='https://example.com' target='_blank'>More info</a>");
+            layer.bindPopup("<b><a href='https://jeffersonrowellproperties.com/Crossroads-of-MS-1' target='_blank'>Crossroads of Mississippi</a></b><br>* Two adjacent tracts totaling 26.47 acres (9.9 acres & 16.57 acres)<br>* Direct access to I-20, I-55, Hwy 49 & Hwy 80.");
         }
-    });
+    }).addTo(map);
 
     var holmes = L.geoJSON(holmesData, {
-        style: { color: '#d4af37', fillOpacity: 0.5 },
+        style: { color: '#d4af37', fillOpacity: 0.2 },
         onEachFeature: (feature, layer) => {
-            layer.bindPopup("<b>10.39 A Rankin</b><br><a href='https://example.com' target='_blank'>More info</a>");
+            layer.bindPopup("<b><a href='https://jeffersonrowellproperties.com/HW-49-Florence-1' target='_blank'>U.S. HW 49 Frontage</a></b><br>* 10.39 acres of undeveloped commercial land<br>* 700+ feet frontage on U.S. Hwy 49.");
         }
-    });
+    }).addTo(map);
 
     var nickles = L.geoJSON(nicklesData, {
-        style: { color: '#d4af37', fillOpacity: 0.5 },
+        style: { color: '#d4af37', fillOpacity: 0.2 },
         onEachFeature: (feature, layer) => {
-            layer.bindPopup("<b>9.9 A Rankin</b><br><a href='https://example.com' target='_blank'>More info</a>");
+            layer.bindPopup("<b><a href='https://jeffersonrowellproperties.com/Crossroads-of-MS-1' target='_blank'>Crossroads of Mississippi</a></b><br>* Two adjacent tracts totaling 26.47 acres (9.9 acres & 16.57 acres)<br>* Direct access to I-20, I-55, Hwy 49 & Hwy 80.");
         }
-    });
+    }).addTo(map);
 
     var combined = L.geoJSON(combinedData, {
-        style: { color: '#d4af37', fillOpacity: 0.5 },
+        style: { color: '#d4af37', fillOpacity: 0.2 },
         onEachFeature: (feature, layer) => {
-            layer.bindPopup("<b>26.47 A Rankin</b><br><a href='https://example.com' target='_blank'>More info</a>");
+            layer.bindPopup("<b><a href='https://jeffersonrowellproperties.com/Crossroads-of-MS-1' target='_blank'>Crossroads of Mississippi</a></b><br>* Two adjacent tracts totaling 26.47 acres (9.9 acres & 16.57 acres)<br>* Direct access to I-20, I-55, Hwy 49 & Hwy 80.");
         }
     });
 
     var baseMaps = {
         "Streets": streets,
-        "Satellite": satellite,
-        "Topographic": topo
+        "Esri Topo": esriTopo
     };
 
     var overlayMaps = {
@@ -86,8 +80,13 @@ Promise.all([
         "Floodway": floodway
     };
 
-    var layerControl = L.control.layers(baseMaps, overlayMaps, { collapsed: true }).addTo(map);
-    L.control.scale({ position: 'bottomleft', imperial: false }).addTo(map);
+    var layerControl = L.control.layers(baseMaps, overlayMaps, { collapsed: false }).addTo(map);
+    L.control.scale({ position: 'bottomleft', imperial: true, metric: false }).addTo(map);
+
+    // Show only specific layers on load
+    map.addLayer(nickles);
+    map.addLayer(broadhead);
+    map.addLayer(holmes);
 
     // Layer exclusivity logic
     map.on('overlayadd', function(e) {
@@ -109,7 +108,7 @@ Promise.all([
     map.on('zoomend', () => {
         const zoom = map.getZoom();
         pins.forEach(pin => {
-            if (zoom >= 12) map.removeLayer(pin);
+            if (zoom >= 17) map.removeLayer(pin);
             else map.addLayer(pin);
         });
     });
@@ -117,4 +116,5 @@ Promise.all([
 </script>
 </body>
 </html>
+
 
