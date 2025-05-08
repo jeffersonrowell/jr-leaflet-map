@@ -36,17 +36,44 @@ var sites = L.geoJSON(null, {
 });
 
 // Load GeoJSON files
+// Contours → sage/olive green
 fetch('geojson/contours.geojson')
     .then(response => response.json())
-    .then(data => contours.addData(data));
+    .then(data => {
+        L.geoJSON(data, {
+            style: {
+                color: '#78866b',  // sage/olive green
+                weight: 1
+            }
+        }).addTo(map);
+    });
 
+// Floodmap → marine blue
 fetch('geojson/floodmap.geojson')
     .then(response => response.json())
-    .then(data => floodmap.addData(data));
+    .then(data => {
+        L.geoJSON(data, {
+            style: {
+                color: '#2b5d85',  // marine blue
+                fillOpacity: 0.4
+            }
+        }).addTo(map);
+    });
 
+// Sites → semi-transparent mustard
 fetch('geojson/sites.geojson')
     .then(response => response.json())
-    .then(data => sites.addData(data));
+    .then(data => {
+        L.geoJSON(data, {
+            style: {
+                color: '#d4af37',  // mustard
+                fillOpacity: 0.5
+            },
+            onEachFeature: function (feature, layer) {
+                layer.bindPopup(feature.properties.name || "Site");
+            }
+        }).addTo(map);
+    });
 
 // Add layer controls
 var baseMaps = {
