@@ -1,3 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>JR Leaflet Map</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        #map { height: 100vh; width: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+var map = L.map('map').setView([32.255, -90.135], 10);
+
+// Basemap layers
+var streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+var satellite = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenTopoMap contributors'
+});
+
+// Load and style layers
+var contours, floodmap, sites;
+
 Promise.all([
     fetch('geojson/contours_clipped_4326.geojson').then(res => res.json()),
     fetch('geojson/floodway_4326.geojson').then(res => res.json()),
@@ -5,23 +35,42 @@ Promise.all([
 ]).then(([contoursData, floodmapData, sitesData]) => {
 
     contours = L.geoJSON(contoursData, {
-        style: { color: '#78866b', weight: 1 }
+        style: {
+            color: '#78866b',  // sage/olive green
+            weight: 1
+        }
     }).addTo(map);
 
     floodmap = L.geoJSON(floodmapData, {
-        style: { color: '#2b5d85', fillOpacity: 0.4 }
+        style: {
+            color: '#2b5d85',  // marine blue
+            fillOpacity: 0.4
+        }
     }).addTo(map);
 
     sites = L.geoJSON(sitesData, {
-        style: { color: '#d4af37', fillOpacity: 0.5 },
+        style: {
+            color: '#d4af37',  // mustard
+            fillOpacity: 0.5
+        },
         onEachFeature: function (feature, layer) {
             layer.bindPopup(feature.properties.name || "Site");
         }
     }).addTo(map);
 
-    var baseMaps = { "Streets": streets, "Satellite": satellite };
-    var overlayMaps = { "Contours": contours, "Floodway": floodmap, "Broadhead Site": sites };
+    var baseMaps = {
+        "Streets": streets,
+        "Satellite": satellite
+    };
+
+    var overlayMaps = {
+        "Contours": contours,
+        "Floodway": floodmap,
+        "Broadhead Site": sites
+    };
+
     L.control.layers(baseMaps, overlayMaps).addTo(map);
 });
-
-
+</script>
+</body>
+</html>
