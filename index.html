@@ -39,37 +39,16 @@ Promise.all([
     fetch('geojson/mississippi/rankin/nickles_broadhead.geojson').then(res => res.json())
 ]).then(([floodwayData, broadheadData, holmesData, nicklesData, combinedData]) => {
 
-    var floodway = L.geoJSON(floodwayData, {
-        style: { color: '#3f93ba', fillOpacity: 0.2, stroke: false }
-    });
+    function styleLayer() {
+        return { color: '#999999', weight: 1, fillColor: '#ffffff', fillOpacity: 0.2 };
+    }
 
-    var broadhead = L.geoJSON(broadheadData, {
-        style: { color: '#d4af37', fillOpacity: 0.2 },
-        onEachFeature: (feature, layer) => {
-            layer.bindPopup("<b>Crossroads of Mississippi</b><br>&bull; Two adjacent tracts totaling 26.47 acres (9.9 acres & 16.57 acres)<br>&bull; Direct access to I-20, I-55, Hwy 49 & Hwy 80");
-        }
-    });
+    var floodway = L.geoJSON(floodwayData, { style: styleLayer() });
 
-    var holmes = L.geoJSON(holmesData, {
-        style: { color: '#d4af37', fillOpacity: 0.2 },
-        onEachFeature: (feature, layer) => {
-            layer.bindPopup("<b>U.S. HW 49 Frontage</b><br>&bull; 10.39 acres of undeveloped commercial land<br>&bull; 700+ feet frontage on U.S. Hwy 49");
-        }
-    });
-
-    var nickles = L.geoJSON(nicklesData, {
-        style: { color: '#d4af37', fillOpacity: 0.2 },
-        onEachFeature: (feature, layer) => {
-            layer.bindPopup("<b>Crossroads of Mississippi</b><br>&bull; Two adjacent tracts totaling 26.47 acres (9.9 acres & 16.57 acres)<br>&bull; Direct access to I-20, I-55, Hwy 49 & Hwy 80");
-        }
-    });
-
-    var combined = L.geoJSON(combinedData, {
-        style: { color: '#d4af37', fillOpacity: 0.2 },
-        onEachFeature: (feature, layer) => {
-            layer.bindPopup("<b>Crossroads of Mississippi</b><br>&bull; Two adjacent tracts totaling 26.47 acres (9.9 acres & 16.57 acres)<br>&bull; Direct access to I-20, I-55, Hwy 49 & Hwy 80");
-        }
-    });
+    var broadhead = L.geoJSON(broadheadData, { style: styleLayer() });
+    var holmes = L.geoJSON(holmesData, { style: styleLayer() });
+    var nickles = L.geoJSON(nicklesData, { style: styleLayer() });
+    var combined = L.geoJSON(combinedData, { style: styleLayer() });
 
     var baseMaps = {
         "Streets": streets,
@@ -92,18 +71,42 @@ Promise.all([
     map.addLayer(broadhead);
     map.addLayer(holmes);
 
-    // Strict layer priority logic
+    // Strict priority logic + checkbox sync
     map.on('overlayadd', function(e) {
+        const layerMap = {
+            '9.9 ac Rankin': nickles,
+            '16.57 ac Rankin': broadhead,
+            '26.47 ac Rankin': combined
+        };
+
         if (e.name === '26.47 ac Rankin') {
-            if (map.hasLayer(nickles)) map.removeLayer(nickles);
-            if (map.hasLayer(broadhead)) map.removeLayer(broadhead);
+            if (map.hasLayer(nickles)) {
+                map.removeLayer(nickles);
+                uncheckBox('9.9 ac Rankin');
+            }
+            if (map.hasLayer(broadhead)) {
+                map.removeLayer(broadhead);
+                uncheckBox('16.57 ac Rankin');
+            }
         }
         if (e.name === '9.9 ac Rankin' || e.name === '16.57 ac Rankin') {
-            if (map.hasLayer(combined)) map.removeLayer(combined);
+            if (map.hasLayer(combined)) {
+                map.removeLayer(combined);
+                uncheckBox('26.47 ac Rankin');
+            }
         }
     });
 
-    // Pins as clickable links (no popup links)
+    function uncheckBox(name) {
+        document.querySelectorAll('.leaflet-control-layers-overlays label').forEach(label => {
+            if (label.textContent.includes(name)) {
+                let checkbox = label.querySelector('input');
+                if (checkbox.checked) checkbox.click();
+            }
+        });
+    }
+
+    // Add pins as clickable links
     var pin1 = L.marker([32.174586, -90.135014]).addTo(map)
         .bindTooltip("<u>U.S. HW 49 Frontage</u><br>&bull; 10.39 acres of undeveloped commercial land<br>&bull; 700+ feet frontage on U.S. Hwy 49")
         .on('click', function() {
