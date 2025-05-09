@@ -5,6 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.extra-markers/dist/css/leaflet.extra-markers.min.css" />
     <style>
         html, body { height: 100%; margin: 0; padding: 0; }
         #map { height: calc(100vh - 60px); width: 100%; }
@@ -16,24 +17,17 @@
 <div id="map"></div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.extra-markers/dist/js/leaflet.extra-markers.min.js"></script>
 <script>
 var map = L.map('map');
 
-// Fit bounds to MS + AL
-var bounds = L.latLngBounds([[30, -91], [35.5, -84]]);
+// ✅ Updated bounding box for mobile fit
+var bounds = L.latLngBounds([[30, -91], [35, -84]]);
 map.fitBounds(bounds);
 
-var streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors'
-}).addTo(map);
-
-var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    attribution: 'Tiles © Esri & contributors'
-});
-
-var esriTopo = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
-    attribution: 'Tiles © Esri & contributors'
-});
+var streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(map);
+var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles © Esri & contributors' });
+var esriTopo = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles © Esri & contributors' });
 
 Promise.all([
     fetch('geojson/mississippi/rankin/floodway_4326.geojson').then(res => res.json()),
@@ -43,44 +37,53 @@ Promise.all([
     fetch('geojson/mississippi/rankin/nickles_broadhead.geojson').then(res => res.json())
 ]).then(([floodwayData, broadheadData, holmesData, nicklesData, combinedData]) => {
 
-    var floodway = L.geoJSON(floodwayData, {
-        style: { color: '#3f93ba', weight: 1, fillOpacity: 0.4 }
-    });
+    function popupContent(title, details) {
+        return `<div style="font-weight:bold; font-size:1.2em; text-decoration:underline;">${title}</div>
+                <br><b>Physical Characteristics</b><br>${details.physical}
+                <br><b>Utilities</b><br>${details.utilities}
+                <br><b>Transportation</b><br>${details.transport}`;
+    }
+
+    var floodway = L.geoJSON(floodwayData, { style: { color: '#3f93ba', weight: 1, fillOpacity: 0.4 } }); // ✅ restored marine blue
+
+    function siteStyle() {
+        return { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.15 }; // ✅ more transparent overlays
+    }
 
     var broadhead = L.geoJSON(broadheadData, {
-        style: { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.3 },
-        onEachFeature: (feature, layer) => {
-            layer.bindPopup("<u>16.57 ac Rankin</u><br><b>Physical Characteristics</b><br>Size: 16.57 acres<br>Zoning: Industrial<br><b>Utilities</b><br>Water, Sewer, Gas, Electric<br><b>Transportation</b><br>Highway access, rail nearby");
-        }
+        style: siteStyle(),
+        onEachFeature: (feature, layer) => layer.bindPopup(popupContent("16.57 ac Rankin", {
+            physical: "Size: 16.57 acres<br>Zoning: Industrial",
+            utilities: "Water, Sewer, Gas, Electric",
+            transport: "Highway access, rail nearby"
+        }))
     });
-
     var holmes = L.geoJSON(holmesData, {
-        style: { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.3 },
-        onEachFeature: (feature, layer) => {
-            layer.bindPopup("<u>10.39 ac Rankin</u><br><b>Physical Characteristics</b><br>Size: 10.39 acres<br>Zoning: Commercial<br><b>Utilities</b><br>Water, Sewer, Gas, Electric<br><b>Transportation</b><br>US Hwy 49 frontage");
-        }
+        style: siteStyle(),
+        onEachFeature: (feature, layer) => layer.bindPopup(popupContent("10.39 ac Rankin", {
+            physical: "Size: 10.39 acres<br>Zoning: Commercial",
+            utilities: "Water, Sewer, Gas, Electric",
+            transport: "US Hwy 49 frontage"
+        }))
     });
-
     var nickles = L.geoJSON(nicklesData, {
-        style: { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.3 },
-        onEachFeature: (feature, layer) => {
-            layer.bindPopup("<u>9.9 ac Rankin</u><br><b>Physical Characteristics</b><br>Size: 9.9 acres<br>Zoning: Industrial<br><b>Utilities</b><br>Water, Sewer, Gas, Electric<br><b>Transportation</b><br>Highway access, rail nearby");
-        }
+        style: siteStyle(),
+        onEachFeature: (feature, layer) => layer.bindPopup(popupContent("9.9 ac Rankin", {
+            physical: "Size: 9.9 acres<br>Zoning: Industrial",
+            utilities: "Water, Sewer, Gas, Electric",
+            transport: "Highway access, rail nearby"
+        }))
     });
-
     var combined = L.geoJSON(combinedData, {
-        style: { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.3 },
-        onEachFeature: (feature, layer) => {
-            layer.bindPopup("<u>26.47 ac Rankin</u><br><b>Physical Characteristics</b><br>Size: 26.47 acres<br>Zoning: Industrial<br><b>Utilities</b><br>Water, Sewer, Gas, Electric<br><b>Transportation</b><br>Direct access to I-20, I-55, Hwy 49, Hwy 80");
-        }
+        style: siteStyle(),
+        onEachFeature: (feature, layer) => layer.bindPopup(popupContent("26.47 ac Rankin", {
+            physical: "Size: 26.47 acres<br>Zoning: Industrial",
+            utilities: "Water, Sewer, Gas, Electric",
+            transport: "Direct access to I-20, I-55, Hwy 49, Hwy 80"
+        }))
     });
 
-    var baseMaps = {
-        "Streets": streets,
-        "Satellite": satellite,
-        "Esri Topo": esriTopo
-    };
-
+    var baseMaps = { "Streets": streets, "Satellite": satellite, "Esri Topo": esriTopo };
     var overlayMaps = {
         "9.9 ac Rankin": nickles,
         "16.57 ac Rankin": broadhead,
@@ -96,12 +99,12 @@ Promise.all([
     map.addLayer(broadhead);
     map.addLayer(holmes);
 
+    // ✅ fixed layer toggle logic
     map.on('overlayadd', function(e) {
         if (e.name === '26.47 ac Rankin') {
             if (map.hasLayer(nickles)) { map.removeLayer(nickles); uncheckBox('9.9 ac Rankin'); }
             if (map.hasLayer(broadhead)) { map.removeLayer(broadhead); uncheckBox('16.57 ac Rankin'); }
-        }
-        if (e.name === '9.9 ac Rankin' || e.name === '16.57 ac Rankin') {
+        } else if (e.name === '9.9 ac Rankin' || e.name === '16.57 ac Rankin') {
             if (map.hasLayer(combined)) { map.removeLayer(combined); uncheckBox('26.47 ac Rankin'); }
         }
     });
@@ -115,13 +118,20 @@ Promise.all([
         });
     }
 
-    var pin1 = L.marker([32.174586, -90.135014]).addTo(map)
+    var crimsonIcon = L.ExtraMarkers.icon({
+        icon: 'fa-map-marker',
+        markerColor: 'red', // ✅ crimson-like color
+        shape: 'circle',
+        prefix: 'fa'
+    });
+
+    var pin1 = L.marker([32.174586, -90.135014], { icon: crimsonIcon }).addTo(map)
         .bindTooltip("<u>U.S. HW 49 Frontage</u><br>&bull; 10.39 acres undeveloped<br>&bull; 700+ ft frontage")
         .on('click', function() {
             window.open('https://jeffersonrowellproperties.com', '_blank');
         });
 
-    var pin2 = L.marker([32.260453, -90.144217]).addTo(map)
+    var pin2 = L.marker([32.260453, -90.144217], { icon: crimsonIcon }).addTo(map)
         .bindTooltip("<u>Crossroads of Mississippi</u><br>&bull; 26.47 acres (9.9 + 16.57)<br>&bull; Access to I-20, I-55, Hwy 49")
         .on('click', function() {
             window.open('https://jeffersonrowellproperties.com', '_blank');
@@ -141,4 +151,5 @@ Promise.all([
 </script>
 </body>
 </html>
+
 
