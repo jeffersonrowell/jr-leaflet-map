@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>JR Leaflet Map (Final Fixed)</title>
+    <title>JR Leaflet Map (Final Toggle Fix)</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
@@ -108,24 +108,16 @@ Promise.all([
     map.addLayer(broadhead);
     map.addLayer(holmes);
 
+    // Toggle logic (no uncheckBox, direct layer control)
     map.on('overlayadd', function(e) {
         if (e.name === '26.47 ac - Rankin') {
-            if (map.hasLayer(nickles)) { map.removeLayer(nickles); uncheckBox('9.9 ac - Rankin'); }
-            if (map.hasLayer(broadhead)) { map.removeLayer(broadhead); uncheckBox('16.57 ac - Rankin'); }
+            if (map.hasLayer(nickles)) map.removeLayer(nickles);
+            if (map.hasLayer(broadhead)) map.removeLayer(broadhead);
         }
         if (e.name === '9.9 ac - Rankin' || e.name === '16.57 ac - Rankin') {
-            if (map.hasLayer(combined)) { map.removeLayer(combined); uncheckBox('26.47 ac - Rankin'); }
+            if (map.hasLayer(combined)) map.removeLayer(combined);
         }
     });
-
-    function uncheckBox(name) {
-        document.querySelectorAll('.leaflet-control-layers-overlays label').forEach(label => {
-            if (label.textContent.includes(name)) {
-                let checkbox = label.querySelector('input');
-                if (checkbox.checked) checkbox.click();
-            }
-        });
-    }
 
     var pin1 = L.marker([32.174586, -90.135014], {
         icon: L.divIcon({ className: 'custom-marker' })
