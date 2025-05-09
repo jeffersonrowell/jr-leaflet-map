@@ -58,7 +58,7 @@ Promise.all([
                 <br><br><a href="${link}" target="_blank">→ More</a>`;
     }
 
-    var floodway = L.geoJSON(floodwayData, { style: { color: '#3f93ba', weight: 1, fillOpacity: 0.4 } });
+    var floodway = L.geoJSON(floodwayData, { style: { color: '#3f93ba', weight: 0, fillOpacity: 0.4 } });
     var broadhead = L.geoJSON(broadheadData, {
         style: { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.15 },
         onEachFeature: (feature, layer) => layer.bindPopup(popupContent("16.57 ac - Rankin", {
@@ -110,11 +110,11 @@ Promise.all([
 
     map.on('overlayadd', function(e) {
         if (e.name === '26.47 ac - Rankin') {
-            uncheckBox('9.9 ac - Rankin');
-            uncheckBox('16.57 ac - Rankin');
+            if (map.hasLayer(nickles)) { map.removeLayer(nickles); uncheckBox('9.9 ac - Rankin'); }
+            if (map.hasLayer(broadhead)) { map.removeLayer(broadhead); uncheckBox('16.57 ac - Rankin'); }
         }
         if (e.name === '9.9 ac - Rankin' || e.name === '16.57 ac - Rankin') {
-            uncheckBox('26.47 ac - Rankin');
+            if (map.hasLayer(combined)) { map.removeLayer(combined); uncheckBox('26.47 ac - Rankin'); }
         }
     });
 
