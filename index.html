@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>JR Leaflet Map</title>
+    <title>JR Leaflet Map (Improved)</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
@@ -9,6 +9,14 @@
         html, body { height: 100%; margin: 0; padding: 0; }
         #map { height: calc(100vh - 60px); width: 100%; }
         .leaflet-control-attribution { display: none; }
+        .custom-marker {
+            background: #8B0000; /* dark crimson red */
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
     </style>
 </head>
 <body>
@@ -16,9 +24,16 @@
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-var map = L.map('map').setView([32.5, -88], 6);
+var map = L.map('map', {
+    zoomAnimation: true,
+    fadeAnimation: true,
+    markerZoomAnimation: true
+}).setView([32.5, -88], 6);
 
-var streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(map);
+var streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    subdomains: ['a', 'b', 'c'],
+    attribution: '© OpenStreetMap contributors'
+}).addTo(map);
 var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles © Esri & contributors' });
 var esriTopo = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles © Esri & contributors' });
 
@@ -106,26 +121,21 @@ Promise.all([
         });
     }
 
-    var crimsonIcon = L.icon({
-        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34]
-    });
+    var pin1 = L.marker([32.174586, -90.135014], {
+        icon: L.divIcon({ className: 'custom-marker' })
+    }).addTo(map).bindPopup(popupContent("U.S. HW 49 Frontage", {
+        physical: "10.39 acres of undeveloped commercial land",
+        utilities: "Water, Sewer, Gas, Electric",
+        transport: "700+ feet frontage on U.S. Hwy 49"
+    }, 'https://jeffersonrowellproperties.com'));
 
-    var pin1 = L.marker([32.174586, -90.135014], { icon: crimsonIcon }).addTo(map)
-        .bindPopup(popupContent("U.S. HW 49 Frontage", {
-            physical: "10.39 acres of undeveloped commercial land",
-            utilities: "Water, Sewer, Gas, Electric",
-            transport: "700+ feet frontage on U.S. Hwy 49"
-        }, 'https://jeffersonrowellproperties.com'));
-
-    var pin2 = L.marker([32.260453, -90.144217], { icon: crimsonIcon }).addTo(map)
-        .bindPopup(popupContent("Crossroads of Mississippi", {
-            physical: "Two adjacent tracts totaling 26.47 acres (9.9 acres & 16.57 acres)",
-            utilities: "Water, Sewer, Gas, Electric",
-            transport: "Direct access to I-20, I-55, Hwy 49 & Hwy 80"
-        }, 'https://jeffersonrowellproperties.com'));
+    var pin2 = L.marker([32.260453, -90.144217], {
+        icon: L.divIcon({ className: 'custom-marker' })
+    }).addTo(map).bindPopup(popupContent("Crossroads of Mississippi", {
+        physical: "Two adjacent tracts totaling 26.47 acres (9.9 acres & 16.57 acres)",
+        utilities: "Water, Sewer, Gas, Electric",
+        transport: "Direct access to I-20, I-55, Hwy 49 & Hwy 80"
+    }, 'https://jeffersonrowellproperties.com'));
 
     var pins = [pin1, pin2];
     map.on('zoomend', () => {
