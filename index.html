@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>JR Leaflet Map (Final Toggle Fix)</title>
+    <title>JR Leaflet Map (Best Effort Fix)</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
@@ -108,14 +108,14 @@ Promise.all([
     map.addLayer(broadhead);
     map.addLayer(holmes);
 
-    // Toggle logic (no uncheckBox, direct layer control)
     map.on('overlayadd', function(e) {
         if (e.name === '26.47 ac - Rankin') {
-            if (map.hasLayer(nickles)) map.removeLayer(nickles);
-            if (map.hasLayer(broadhead)) map.removeLayer(broadhead);
+            map.removeLayer(nickles);
+            map.removeLayer(broadhead);
+            map.addLayer(combined);
         }
         if (e.name === '9.9 ac - Rankin' || e.name === '16.57 ac - Rankin') {
-            if (map.hasLayer(combined)) map.removeLayer(combined);
+            map.removeLayer(combined);
         }
     });
 
@@ -149,3 +149,4 @@ Promise.all([
 </script>
 </body>
 </html>
+
