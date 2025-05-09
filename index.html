@@ -3,12 +3,20 @@
 <head>
     <title>JR Leaflet Map</title>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
-        #map { height: 100vh; width: 100%; margin-left: 10px; }
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        #map {
+            height: calc(100vh - 60px);
+            width: 100%;
+        }
         .leaflet-control-attribution { display: none; }
-        .leaflet-tooltip { font-size: 16px; font-weight: bold; }
+        .leaflet-tooltip { font-size: 16px; font-weight: normal; }
     </style>
 </head>
 <body>
@@ -16,7 +24,7 @@
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-var map = L.map('map').setView([32.25, -88.2], 6.8);
+var map = L.map('map').setView([32.25, -88.2], 6);  // zoomed out to show MS + AL
 
 var streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
@@ -43,34 +51,10 @@ Promise.all([
     }
 
     var floodway = L.geoJSON(floodwayData, { style: styleLayer() });
-
-    var broadhead = L.geoJSON(broadheadData, {
-        style: styleLayer(),
-        onEachFeature: (feature, layer) => {
-            layer.bindPopup("<b>16.57 ac Rankin</b><br><b>Physical Characteristics</b><br>Size: 16.57 acres<br>Location: Rankin, MS<br>Zoning: Industrial<br><b>Utilities</b><br>Water, Sewer, Gas, Electric<br><b>Transportation</b><br>Highway access, Rail nearby");
-        }
-    });
-
-    var holmes = L.geoJSON(holmesData, {
-        style: styleLayer(),
-        onEachFeature: (feature, layer) => {
-            layer.bindPopup("<b>10.39 ac Rankin</b><br><b>Physical Characteristics</b><br>Size: 10.39 acres<br>Location: Rankin, MS<br>Zoning: Commercial<br><b>Utilities</b><br>Water, Sewer, Gas, Electric<br><b>Transportation</b><br>Hwy 49 frontage");
-        }
-    });
-
-    var nickles = L.geoJSON(nicklesData, {
-        style: styleLayer(),
-        onEachFeature: (feature, layer) => {
-            layer.bindPopup("<b>9.9 ac Rankin</b><br><b>Physical Characteristics</b><br>Size: 9.9 acres<br>Location: Rankin, MS<br>Zoning: Industrial<br><b>Utilities</b><br>Water, Sewer, Gas, Electric<br><b>Transportation</b><br>Highway access, Rail nearby");
-        }
-    });
-
-    var combined = L.geoJSON(combinedData, {
-        style: styleLayer(),
-        onEachFeature: (feature, layer) => {
-            layer.bindPopup("<b>26.47 ac Rankin</b><br><b>Physical Characteristics</b><br>Size: 26.47 acres (combined)<br>Location: Rankin, MS<br>Zoning: Industrial<br><b>Utilities</b><br>Water, Sewer, Gas, Electric<br><b>Transportation</b><br>Direct access to I-20, I-55, Hwy 49 & Hwy 80");
-        }
-    });
+    var broadhead = L.geoJSON(broadheadData, { style: styleLayer() });
+    var holmes = L.geoJSON(holmesData, { style: styleLayer() });
+    var nickles = L.geoJSON(nicklesData, { style: styleLayer() });
+    var combined = L.geoJSON(combinedData, { style: styleLayer() });
 
     var baseMaps = {
         "Streets": streets,
@@ -113,13 +97,13 @@ Promise.all([
     }
 
     var pin1 = L.marker([32.174586, -90.135014]).addTo(map)
-        .bindTooltip("<u>U.S. HW 49 Frontage</u><br>&bull; 10.39 acres of undeveloped commercial land<br>&bull; 700+ feet frontage on U.S. Hwy 49")
+        .bindTooltip("U.S. HW 49 Frontage<br>&bull; 10.39 acres undeveloped<br>&bull; 700+ ft frontage")
         .on('click', function() {
             window.open('https://jeffersonrowellproperties.com', '_blank');
         });
 
     var pin2 = L.marker([32.260453, -90.144217]).addTo(map)
-        .bindTooltip("<u>Crossroads of Mississippi</u><br>&bull; Two adjacent tracts totaling 26.47 acres<br>&bull; Direct access to I-20, I-55, Hwy 49 & Hwy 80")
+        .bindTooltip("Crossroads of Mississippi<br>&bull; 26.47 acres (9.9 + 16.57)<br>&bull; Access to I-20, I-55, Hwy 49")
         .on('click', function() {
             window.open('https://jeffersonrowellproperties.com', '_blank');
         });
@@ -132,6 +116,9 @@ Promise.all([
             else map.addLayer(pin);
         });
     });
+
+    // Force map to fit correctly on mobile after load
+    map.whenReady(() => map.invalidateSize());
 });
 </script>
 </body>
