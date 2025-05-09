@@ -6,15 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-        }
-        #map {
-            height: calc(100vh - 60px);
-            width: 100%;
-        }
+        html, body { height: 100%; margin: 0; padding: 0; }
+        #map { height: calc(100vh - 60px); width: 100%; }
         .leaflet-control-attribution { display: none; }
         .leaflet-tooltip { font-size: 16px; font-weight: normal; }
     </style>
@@ -24,7 +17,11 @@
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-var map = L.map('map').setView([32.25, -88.2], 6);  // zoomed out to show MS + AL
+var map = L.map('map');
+
+// Fit bounds to MS + AL
+var bounds = L.latLngBounds([[30, -91], [35.5, -84]]);
+map.fitBounds(bounds);
 
 var streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
@@ -46,15 +43,37 @@ Promise.all([
     fetch('geojson/mississippi/rankin/nickles_broadhead.geojson').then(res => res.json())
 ]).then(([floodwayData, broadheadData, holmesData, nicklesData, combinedData]) => {
 
-    function styleLayer() {
-        return { color: '#999999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.3 };
-    }
+    var floodway = L.geoJSON(floodwayData, {
+        style: { color: '#3f93ba', weight: 1, fillOpacity: 0.4 }
+    });
 
-    var floodway = L.geoJSON(floodwayData, { style: styleLayer() });
-    var broadhead = L.geoJSON(broadheadData, { style: styleLayer() });
-    var holmes = L.geoJSON(holmesData, { style: styleLayer() });
-    var nickles = L.geoJSON(nicklesData, { style: styleLayer() });
-    var combined = L.geoJSON(combinedData, { style: styleLayer() });
+    var broadhead = L.geoJSON(broadheadData, {
+        style: { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.3 },
+        onEachFeature: (feature, layer) => {
+            layer.bindPopup("<u>16.57 ac Rankin</u><br><b>Physical Characteristics</b><br>Size: 16.57 acres<br>Zoning: Industrial<br><b>Utilities</b><br>Water, Sewer, Gas, Electric<br><b>Transportation</b><br>Highway access, rail nearby");
+        }
+    });
+
+    var holmes = L.geoJSON(holmesData, {
+        style: { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.3 },
+        onEachFeature: (feature, layer) => {
+            layer.bindPopup("<u>10.39 ac Rankin</u><br><b>Physical Characteristics</b><br>Size: 10.39 acres<br>Zoning: Commercial<br><b>Utilities</b><br>Water, Sewer, Gas, Electric<br><b>Transportation</b><br>US Hwy 49 frontage");
+        }
+    });
+
+    var nickles = L.geoJSON(nicklesData, {
+        style: { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.3 },
+        onEachFeature: (feature, layer) => {
+            layer.bindPopup("<u>9.9 ac Rankin</u><br><b>Physical Characteristics</b><br>Size: 9.9 acres<br>Zoning: Industrial<br><b>Utilities</b><br>Water, Sewer, Gas, Electric<br><b>Transportation</b><br>Highway access, rail nearby");
+        }
+    });
+
+    var combined = L.geoJSON(combinedData, {
+        style: { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.3 },
+        onEachFeature: (feature, layer) => {
+            layer.bindPopup("<u>26.47 ac Rankin</u><br><b>Physical Characteristics</b><br>Size: 26.47 acres<br>Zoning: Industrial<br><b>Utilities</b><br>Water, Sewer, Gas, Electric<br><b>Transportation</b><br>Direct access to I-20, I-55, Hwy 49, Hwy 80");
+        }
+    });
 
     var baseMaps = {
         "Streets": streets,
@@ -97,13 +116,13 @@ Promise.all([
     }
 
     var pin1 = L.marker([32.174586, -90.135014]).addTo(map)
-        .bindTooltip("U.S. HW 49 Frontage<br>&bull; 10.39 acres undeveloped<br>&bull; 700+ ft frontage")
+        .bindTooltip("<u>U.S. HW 49 Frontage</u><br>&bull; 10.39 acres undeveloped<br>&bull; 700+ ft frontage")
         .on('click', function() {
             window.open('https://jeffersonrowellproperties.com', '_blank');
         });
 
     var pin2 = L.marker([32.260453, -90.144217]).addTo(map)
-        .bindTooltip("Crossroads of Mississippi<br>&bull; 26.47 acres (9.9 + 16.57)<br>&bull; Access to I-20, I-55, Hwy 49")
+        .bindTooltip("<u>Crossroads of Mississippi</u><br>&bull; 26.47 acres (9.9 + 16.57)<br>&bull; Access to I-20, I-55, Hwy 49")
         .on('click', function() {
             window.open('https://jeffersonrowellproperties.com', '_blank');
         });
@@ -117,9 +136,9 @@ Promise.all([
         });
     });
 
-    // Force map to fit correctly on mobile after load
     map.whenReady(() => map.invalidateSize());
 });
 </script>
 </body>
 </html>
+
