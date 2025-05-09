@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>JR Leaflet Map (Best Effort Fix)</title>
+    <title>JR Leaflet Map (Final Fix)</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
@@ -37,18 +37,23 @@ var streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', 
     subdomains: ['a', 'b', 'c'],
     attribution: '© OpenStreetMap contributors'
 }).addTo(map);
-var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles © Esri & contributors' });
-var esriTopo = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles © Esri & contributors' });
+var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles © Esri & contributors'
+});
+var esriTopo = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles © Esri & contributors'
+});
 
 L.control.fullscreen().addTo(map);
+
+let nickles, broadhead, holmes, floodway;
 
 Promise.all([
     fetch('geojson/mississippi/rankin/floodway_4326.geojson').then(res => res.json()),
     fetch('geojson/mississippi/rankin/broadhead.geojson').then(res => res.json()),
     fetch('geojson/mississippi/rankin/holmes.geojson').then(res => res.json()),
-    fetch('geojson/mississippi/rankin/nickles.geojson').then(res => res.json()),
-    fetch('geojson/mississippi/rankin/nickles_broadhead.geojson').then(res => res.json())
-]).then(([floodwayData, broadheadData, holmesData, nicklesData, combinedData]) => {
+    fetch('geojson/mississippi/rankin/nickles.geojson').then(res => res.json())
+]).then(([floodwayData, broadheadData, holmesData, nicklesData]) => {
 
     function popupContent(title, details, link) {
         return `<div style="font-weight:bold; font-size:1.2em;">${title}</div>
@@ -58,8 +63,8 @@ Promise.all([
                 <br><br><a href="${link}" target="_blank">→ More</a>`;
     }
 
-    var floodway = L.geoJSON(floodwayData, { style: { color: '#3f93ba', weight: 0, fillOpacity: 0.4 } });
-    var broadhead = L.geoJSON(broadheadData, {
+    floodway = L.geoJSON(floodwayData, { style: { color: '#3f93ba', weight: 0, fillOpacity: 0.4 } });
+    broadhead = L.geoJSON(broadheadData, {
         style: { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.15 },
         onEachFeature: (feature, layer) => layer.bindPopup(popupContent("16.57 ac - Rankin", {
             physical: "Size: 16.57 acres<br>Zoning: Industrial",
@@ -67,7 +72,7 @@ Promise.all([
             transport: "Highway access, rail nearby"
         }, 'https://jeffersonrowellproperties.com'))
     });
-    var holmes = L.geoJSON(holmesData, {
+    holmes = L.geoJSON(holmesData, {
         style: { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.15 },
         onEachFeature: (feature, layer) => layer.bindPopup(popupContent("U.S. HW 49 Frontage", {
             physical: "10.39 acres of undeveloped commercial land",
@@ -75,7 +80,7 @@ Promise.all([
             transport: "700+ feet frontage on U.S. Hwy 49"
         }, 'https://jeffersonrowellproperties.com'))
     });
-    var nickles = L.geoJSON(nicklesData, {
+    nickles = L.geoJSON(nicklesData, {
         style: { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.15 },
         onEachFeature: (feature, layer) => layer.bindPopup(popupContent("9.9 ac - Rankin", {
             physical: "Size: 9.9 acres<br>Zoning: Industrial",
@@ -83,20 +88,11 @@ Promise.all([
             transport: "Highway access, rail nearby"
         }, 'https://jeffersonrowellproperties.com'))
     });
-    var combined = L.geoJSON(combinedData, {
-        style: { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.15 },
-        onEachFeature: (feature, layer) => layer.bindPopup(popupContent("26.47 ac - Rankin", {
-            physical: "Size: 26.47 acres (9.9 + 16.57)<br>Zoning: Industrial",
-            utilities: "Water, Sewer, Gas, Electric",
-            transport: "Direct access to I-20, I-55, Hwy 49, Hwy 80"
-        }, 'https://jeffersonrowellproperties.com'))
-    });
 
     var baseMaps = { "Streets": streets, "Satellite": satellite, "Esri Topo": esriTopo };
     var overlayMaps = {
         "9.9 ac - Rankin": nickles,
         "16.57 ac - Rankin": broadhead,
-        "26.47 ac - Rankin": combined,
         "10.39 ac - Rankin": holmes,
         "Floodway": floodway
     };
@@ -108,16 +104,22 @@ Promise.all([
     map.addLayer(broadhead);
     map.addLayer(holmes);
 
-    map.on('overlayadd', function(e) {
-        if (e.name === '26.47 ac - Rankin') {
-            map.removeLayer(nickles);
-            map.removeLayer(broadhead);
-            map.addLayer(combined);
-        }
-        if (e.name === '9.9 ac - Rankin' || e.name === '16.57 ac - Rankin') {
-            map.removeLayer(combined);
-        }
+    // Satellite color switcher
+    var satelliteActive = false;
+    map.on('baselayerchange', function(e) {
+        satelliteActive = e.name === 'Satellite';
+        updateSiteStyles();
     });
+
+    function updateSiteStyles() {
+        var lineColor = satelliteActive ? '#8B0000' : '#999';
+        var fillColor = satelliteActive ? 'transparent' : '#ffff66';
+        var fillOpacity = satelliteActive ? 0 : 0.15;
+
+        nickles.setStyle({ color: lineColor, weight: 1, fillColor: fillColor, fillOpacity: fillOpacity });
+        broadhead.setStyle({ color: lineColor, weight: 1, fillColor: fillColor, fillOpacity: fillOpacity });
+        holmes.setStyle({ color: lineColor, weight: 1, fillColor: fillColor, fillOpacity: fillOpacity });
+    }
 
     var pin1 = L.marker([32.174586, -90.135014], {
         icon: L.divIcon({ className: 'custom-marker' })
