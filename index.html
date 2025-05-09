@@ -70,7 +70,7 @@ Promise.all([
             physical: "Size: 16.57 acres<br>Zoning: Industrial",
             utilities: "Water, Sewer, Gas, Electric",
             transport: "Highway access, rail nearby"
-        }, 'https://jeffersonrowellproperties.com'))
+        }, 'https://jeffersonrowellproperties.com/Crossroads-of-MS-1'))
     });
     holmes = L.geoJSON(holmesData, {
         style: { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.15 },
@@ -78,7 +78,7 @@ Promise.all([
             physical: "10.39 acres of undeveloped commercial land",
             utilities: "Water, Sewer, Gas, Electric",
             transport: "700+ feet frontage on U.S. Hwy 49"
-        }, 'https://jeffersonrowellproperties.com'))
+        }, 'https://jeffersonrowellproperties.com/HW-49-Florence-1'))
     });
     nickles = L.geoJSON(nicklesData, {
         style: { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.15 },
@@ -86,7 +86,7 @@ Promise.all([
             physical: "Size: 9.9 acres<br>Zoning: Industrial",
             utilities: "Water, Sewer, Gas, Electric",
             transport: "Highway access, rail nearby"
-        }, 'https://jeffersonrowellproperties.com'))
+        }, 'https://jeffersonrowellproperties.com/Crossroads-of-MS-1'))
     });
 
     var baseMaps = { "Streets": streets, "Satellite": satellite, "Esri Topo": esriTopo };
@@ -128,7 +128,7 @@ Promise.all([
         physical: "10.39 acres of undeveloped commercial land",
         utilities: "Water, Sewer, Gas, Electric",
         transport: "700+ feet frontage on U.S. Hwy 49"
-    }, 'https://jeffersonrowellproperties.com'));
+    }, 'https://jeffersonrowellproperties.com/HW-49-Florence-1'));
 
     var pin2 = L.marker([32.260453, -90.144217], {
         icon: L.divIcon({ className: 'custom-marker' })
@@ -136,7 +136,7 @@ Promise.all([
         physical: "Two adjacent tracts totaling 26.47 acres (9.9 acres & 16.57 acres)",
         utilities: "Water, Sewer, Gas, Electric",
         transport: "Direct access to I-20, I-55, Hwy 49 & Hwy 80"
-    }, 'https://jeffersonrowellproperties.com'));
+    }, 'https://jeffersonrowellproperties.com/Crossroads-of-MS-1'));
 
     var pins = [pin1, pin2];
     map.on('zoomend', () => {
