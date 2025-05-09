@@ -68,14 +68,12 @@ Promise.all([
         }, 'https://jeffersonrowellproperties.com'))
     });
     var holmes = L.geoJSON(holmesData, {
-    style: { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.15 },
-    onEachFeature: (feature, layer) => layer.bindPopup(popupContent("U.S. HW 49 Frontage", {
-        physical: "10.39 acres of undeveloped commercial land",
-        utilities: "Water, Sewer, Gas, Electric",
-        transport: "700+ feet frontage on U.S. Hwy 49"
-    }, 'https://jeffersonrowellproperties.com'))
-});
-
+        style: { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.15 },
+        onEachFeature: (feature, layer) => layer.bindPopup(popupContent("U.S. HW 49 Frontage", {
+            physical: "10.39 acres of undeveloped commercial land",
+            utilities: "Water, Sewer, Gas, Electric",
+            transport: "700+ feet frontage on U.S. Hwy 49"
+        }, 'https://jeffersonrowellproperties.com'))
     });
     var nickles = L.geoJSON(nicklesData, {
         style: { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.15 },
@@ -111,17 +109,14 @@ Promise.all([
     map.addLayer(holmes);
 
     map.on('overlayadd', function(e) {
-    if (e.name === '26.47 ac - Rankin') {
-        // deselect 9.9 and 16.57 if 26.47 is selected
-        if (map.hasLayer(nickles)) { map.removeLayer(nickles); uncheckBox('9.9 ac - Rankin'); }
-        if (map.hasLayer(broadhead)) { map.removeLayer(broadhead); uncheckBox('16.57 ac - Rankin'); }
-    }
-    if (e.name === '9.9 ac - Rankin' || e.name === '16.57 ac - Rankin') {
-        // deselect 26.47 if 9.9 or 16.57 is selected
-        if (map.hasLayer(combined)) { map.removeLayer(combined); uncheckBox('26.47 ac - Rankin'); }
-    }
-});
-
+        if (e.name === '26.47 ac - Rankin') {
+            if (map.hasLayer(nickles)) { map.removeLayer(nickles); uncheckBox('9.9 ac - Rankin'); }
+            if (map.hasLayer(broadhead)) { map.removeLayer(broadhead); uncheckBox('16.57 ac - Rankin'); }
+        }
+        if (e.name === '9.9 ac - Rankin' || e.name === '16.57 ac - Rankin') {
+            if (map.hasLayer(combined)) { map.removeLayer(combined); uncheckBox('26.47 ac - Rankin'); }
+        }
+    });
 
     function uncheckBox(name) {
         document.querySelectorAll('.leaflet-control-layers-overlays label').forEach(label => {
@@ -162,3 +157,4 @@ Promise.all([
 </script>
 </body>
 </html>
+
