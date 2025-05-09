@@ -46,14 +46,15 @@ var esriTopo = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services
 
 L.control.fullscreen().addTo(map);
 
-let nickles, broadhead, holmes, floodway;
+let nickles, broadhead, holmes, floodway, combinedFloodzones;
 
 Promise.all([
     fetch('geojson/mississippi/rankin/floodway_4326.geojson').then(res => res.json()),
     fetch('geojson/mississippi/rankin/broadhead.geojson').then(res => res.json()),
     fetch('geojson/mississippi/rankin/holmes.geojson').then(res => res.json()),
-    fetch('geojson/mississippi/rankin/nickles.geojson').then(res => res.json())
-]).then(([floodwayData, broadheadData, holmesData, nicklesData]) => {
+    fetch('geojson/mississippi/rankin/nickles.geojson').then(res => res.json()),
+    fetch('geojson/combined_floodzones.geojson').then(res => res.json())
+]).then(([floodwayData, broadheadData, holmesData, nicklesData, combinedFloodzonesData]) => {
 
     function popupContent(title, details, link) {
         return `<div style="font-weight:bold; font-size:1.2em;">${title}</div>
@@ -88,13 +89,18 @@ Promise.all([
             transport: "Highway access, rail nearby"
         }, 'https://jeffersonrowellproperties.com/Crossroads-of-MS-1'))
     });
+    combinedFloodzones = L.geoJSON(combinedFloodzonesData, {
+        style: { color: '#0000ff', weight: 1, fillOpacity: 0 },
+        onEachFeature: (feature, layer) => layer.bindPopup("100-year Floodplain (Combined)")
+    });
 
     var baseMaps = { "Streets": streets, "Satellite": satellite, "Esri Topo": esriTopo };
     var overlayMaps = {
         "9.9 ac - Rankin": nickles,
         "16.57 ac - Rankin": broadhead,
         "10.39 ac - Rankin": holmes,
-        "Floodway": floodway
+        "Floodway": floodway,
+        "100-year Floodplain (Combined)": combinedFloodzones
     };
 
     var layerControl = L.control.layers(baseMaps, overlayMaps, { collapsed: true }).addTo(map);
@@ -104,7 +110,6 @@ Promise.all([
     map.addLayer(broadhead);
     map.addLayer(holmes);
 
-    // Satellite color + thickness switcher
     var satelliteActive = false;
     map.on('baselayerchange', function(e) {
         satelliteActive = e.name === 'Satellite';
@@ -152,5 +157,6 @@ Promise.all([
 </script>
 </body>
 </html>
+
 
 
