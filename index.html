@@ -8,7 +8,7 @@
     <style>
         #map { height: 100vh; width: 100%; margin-left: 10px; }
         .leaflet-control-attribution { display: none; }
-        .leaflet-bottom.leaflet-left { margin-bottom: 10px; }
+        .leaflet-tooltip { font-size: 16px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -18,7 +18,6 @@
 <script>
 var map = L.map('map').setView([32.25, -88.2], 6.8);
 
-// Basemap layers
 var streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
 }).addTo(map);
@@ -40,15 +39,38 @@ Promise.all([
 ]).then(([floodwayData, broadheadData, holmesData, nicklesData, combinedData]) => {
 
     function styleLayer() {
-        return { color: '#999999', weight: 1, fillColor: '#ffffff', fillOpacity: 0.2 };
+        return { color: '#999999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.3 };
     }
 
     var floodway = L.geoJSON(floodwayData, { style: styleLayer() });
 
-    var broadhead = L.geoJSON(broadheadData, { style: styleLayer() });
-    var holmes = L.geoJSON(holmesData, { style: styleLayer() });
-    var nickles = L.geoJSON(nicklesData, { style: styleLayer() });
-    var combined = L.geoJSON(combinedData, { style: styleLayer() });
+    var broadhead = L.geoJSON(broadheadData, {
+        style: styleLayer(),
+        onEachFeature: (feature, layer) => {
+            layer.bindPopup("<b>16.57 ac Rankin</b><br><b>Physical Characteristics</b><br>Size: 16.57 acres<br>Location: Rankin, MS<br>Zoning: Industrial<br><b>Utilities</b><br>Water, Sewer, Gas, Electric<br><b>Transportation</b><br>Highway access, Rail nearby");
+        }
+    });
+
+    var holmes = L.geoJSON(holmesData, {
+        style: styleLayer(),
+        onEachFeature: (feature, layer) => {
+            layer.bindPopup("<b>10.39 ac Rankin</b><br><b>Physical Characteristics</b><br>Size: 10.39 acres<br>Location: Rankin, MS<br>Zoning: Commercial<br><b>Utilities</b><br>Water, Sewer, Gas, Electric<br><b>Transportation</b><br>Hwy 49 frontage");
+        }
+    });
+
+    var nickles = L.geoJSON(nicklesData, {
+        style: styleLayer(),
+        onEachFeature: (feature, layer) => {
+            layer.bindPopup("<b>9.9 ac Rankin</b><br><b>Physical Characteristics</b><br>Size: 9.9 acres<br>Location: Rankin, MS<br>Zoning: Industrial<br><b>Utilities</b><br>Water, Sewer, Gas, Electric<br><b>Transportation</b><br>Highway access, Rail nearby");
+        }
+    });
+
+    var combined = L.geoJSON(combinedData, {
+        style: styleLayer(),
+        onEachFeature: (feature, layer) => {
+            layer.bindPopup("<b>26.47 ac Rankin</b><br><b>Physical Characteristics</b><br>Size: 26.47 acres (combined)<br>Location: Rankin, MS<br>Zoning: Industrial<br><b>Utilities</b><br>Water, Sewer, Gas, Electric<br><b>Transportation</b><br>Direct access to I-20, I-55, Hwy 49 & Hwy 80");
+        }
+    });
 
     var baseMaps = {
         "Streets": streets,
@@ -71,29 +93,13 @@ Promise.all([
     map.addLayer(broadhead);
     map.addLayer(holmes);
 
-    // Strict priority logic + checkbox sync
     map.on('overlayadd', function(e) {
-        const layerMap = {
-            '9.9 ac Rankin': nickles,
-            '16.57 ac Rankin': broadhead,
-            '26.47 ac Rankin': combined
-        };
-
         if (e.name === '26.47 ac Rankin') {
-            if (map.hasLayer(nickles)) {
-                map.removeLayer(nickles);
-                uncheckBox('9.9 ac Rankin');
-            }
-            if (map.hasLayer(broadhead)) {
-                map.removeLayer(broadhead);
-                uncheckBox('16.57 ac Rankin');
-            }
+            if (map.hasLayer(nickles)) { map.removeLayer(nickles); uncheckBox('9.9 ac Rankin'); }
+            if (map.hasLayer(broadhead)) { map.removeLayer(broadhead); uncheckBox('16.57 ac Rankin'); }
         }
         if (e.name === '9.9 ac Rankin' || e.name === '16.57 ac Rankin') {
-            if (map.hasLayer(combined)) {
-                map.removeLayer(combined);
-                uncheckBox('26.47 ac Rankin');
-            }
+            if (map.hasLayer(combined)) { map.removeLayer(combined); uncheckBox('26.47 ac Rankin'); }
         }
     });
 
@@ -106,7 +112,6 @@ Promise.all([
         });
     }
 
-    // Add pins as clickable links
     var pin1 = L.marker([32.174586, -90.135014]).addTo(map)
         .bindTooltip("<u>U.S. HW 49 Frontage</u><br>&bull; 10.39 acres of undeveloped commercial land<br>&bull; 700+ feet frontage on U.S. Hwy 49")
         .on('click', function() {
@@ -114,7 +119,7 @@ Promise.all([
         });
 
     var pin2 = L.marker([32.260453, -90.144217]).addTo(map)
-        .bindTooltip("<u>Crossroads of Mississippi</u><br>&bull; Two adjacent tracts totaling 26.47 acres (9.9 acres & 16.57 acres)<br>&bull; Direct access to I-20, I-55, Hwy 49 & Hwy 80")
+        .bindTooltip("<u>Crossroads of Mississippi</u><br>&bull; Two adjacent tracts totaling 26.47 acres<br>&bull; Direct access to I-20, I-55, Hwy 49 & Hwy 80")
         .on('click', function() {
             window.open('https://jeffersonrowellproperties.com', '_blank');
         });
