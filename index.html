@@ -68,12 +68,14 @@ Promise.all([
         }, 'https://jeffersonrowellproperties.com'))
     });
     var holmes = L.geoJSON(holmesData, {
-        style: { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.15 },
-        onEachFeature: (feature, layer) => layer.bindPopup(popupContent("10.39 ac - Rankin", {
-            physical: "10.39 acres of undeveloped commercial land",
-            utilities: "Water, Sewer, Gas, Electric",
-            transport: "700+ feet frontage on U.S. Hwy 49"
-        }, 'https://jeffersonrowellproperties.com'))
+    style: { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.15 },
+    onEachFeature: (feature, layer) => layer.bindPopup(popupContent("U.S. HW 49 Frontage", {
+        physical: "10.39 acres of undeveloped commercial land",
+        utilities: "Water, Sewer, Gas, Electric",
+        transport: "700+ feet frontage on U.S. Hwy 49"
+    }, 'https://jeffersonrowellproperties.com'))
+});
+
     });
     var nickles = L.geoJSON(nicklesData, {
         style: { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.15 },
