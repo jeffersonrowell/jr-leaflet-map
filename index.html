@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>JR Leaflet Map (Final Merged, Corrected)</title>
+    <title>JR Leaflet Map (Final Client Version)</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css" />
     <style>
-        html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
-        #map { height: 100vh; width: 100%; }
+        html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; font-family: sans-serif; }
+        #map { height: 90vh; width: 100%; }
+        #site-links { padding: 5px; text-align: center; background: #f7f7f7; }
+        .site-link { margin: 0 10px; cursor: pointer; }
         .leaflet-control-attribution { display: none; }
         .custom-marker {
             background: #8B0000;
@@ -21,6 +23,12 @@
     </style>
 </head>
 <body>
+
+<div id="site-links">
+    <span class="site-link" data-layer="nickles">9.9 ac - Rankin</span> |
+    <span class="site-link" data-layer="broadhead">16.57 ac - Rankin</span> |
+    <span class="site-link" data-layer="holmes">10.39 ac - Rankin</span>
+</div>
 <div id="map"></div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -38,7 +46,6 @@ var esriTopo = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services
 
 L.control.fullscreen().addTo(map);
 
-// Corrected floodmap paths
 var alFloodLayer, msFloodLayer;
 fetch('alabama/al_floodzones_smooth.geojson').then(res => res.json()).then(data => {
     alFloodLayer = L.geoJSON(data, { style: { color: '#3f93ba', weight: 1, fillOpacity: 0.4 } });
@@ -88,12 +95,16 @@ Promise.all([
         }, 'https://jeffersonrowellproperties.com'))
     });
 
+    var layers = { nickles, broadhead, holmes };
+
     var baseMaps = { "Streets": streets, "Satellite": satellite, "Esri Topo": esriTopo };
     var overlayMaps = {
         "9.9 ac - Rankin": nickles,
         "16.57 ac - Rankin": broadhead,
         "10.39 ac - Rankin": holmes,
-        "Floodway": floodway
+        "Floodway": floodway,
+        "Alabama Flood Zones": alFloodLayer,
+        "Mississippi Flood Zones": msFloodLayer
     };
 
     var layerControl = L.control.layers(baseMaps, overlayMaps, { collapsed: true }).addTo(map);
@@ -103,14 +114,21 @@ Promise.all([
     map.addLayer(broadhead);
     map.addLayer(holmes);
 
+    document.querySelectorAll('.site-link').forEach(link => {
+        link.addEventListener('click', () => {
+            var layer = layers[link.getAttribute('data-layer')];
+            if (layer) map.fitBounds(layer.getBounds());
+        });
+    });
+
     map.on('overlayadd', function(e) {
-        if (e.name.includes('Alabama') && alFloodLayer) map.addLayer(alFloodLayer);
-        if (e.name.includes('Mississippi') && msFloodLayer) map.addLayer(msFloodLayer);
+        if (e.name === 'Alabama Flood Zones' && alFloodLayer) map.addLayer(alFloodLayer);
+        if (e.name === 'Mississippi Flood Zones' && msFloodLayer) map.addLayer(msFloodLayer);
     });
 
     map.on('overlayremove', function(e) {
-        if (e.name.includes('Alabama') && alFloodLayer) map.removeLayer(alFloodLayer);
-        if (e.name.includes('Mississippi') && msFloodLayer) map.removeLayer(msFloodLayer);
+        if (e.name === 'Alabama Flood Zones' && alFloodLayer) map.removeLayer(alFloodLayer);
+        if (e.name === 'Mississippi Flood Zones' && msFloodLayer) map.removeLayer(msFloodLayer);
     });
 
     map.on('baselayerchange', function(e) {
