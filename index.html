@@ -127,10 +127,11 @@ Promise.all([
     setTimeout(() => {
     const initialZoom = map.getZoom();
     document.querySelectorAll('.leaflet-control-layers-overlays label').forEach(label => {
-        if (label.textContent.trim().includes('Floodway')) {
-            label.style.display = initialZoom >= 17 ? 'block' : 'none';
-        }
-    });
+    if (label.textContent.trim().includes('Floodways')) {
+        label.style.display = initialZoom >= 17 ? 'block' : 'none';
+    }
+});
+
 }, 500);
 
 
@@ -192,57 +193,53 @@ Promise.all([
     map.on('zoomend', () => {
     const zoom = map.getZoom();
 
-    // Pins: toggle visibility based on zoom
+    // 🎯 Manage pin visibility
     pins.forEach(pin => {
         if (zoom >= 17) map.removeLayer(pin);
         else map.addLayer(pin);
     });
 
-    // Floodway layer visibility and checkbox control
-    // Floodway layer visibility and checkbox control
+    // 🎯 Floodway logic
+    const floodLabelText = 'Floodways';
+    const floodLabelSelector = '.leaflet-control-layers-overlays label';
+
+    const labelExists = [...document.querySelectorAll(floodLabelSelector + ' span')]
+        .some(el => el.textContent.trim() === floodLabelText);
+
     if (zoom >= 17) {
-    const checkboxExists = [...document.querySelectorAll('.leaflet-control-layers-overlays label span')]
-        .some(el => el.textContent.trim() === 'Regulatory Floodway');
+        if (!labelExists) {
+            layerControl.addOverlay(floodway, floodLabelText);
 
-    if (!checkboxExists) {
-        layerControl.addOverlay(floodway, 'Regulatory Floodway');
+            setTimeout(() => {
+                const floodLabel = [...document.querySelectorAll(floodLabelSelector)]
+                    .find(label => label.textContent.trim().includes(floodLabelText));
 
-        setTimeout(() => {
-            const floodLabel = [...document.querySelectorAll('.leaflet-control-layers-overlays label')]
-                .find(label => label.textContent.trim().includes('Regulatory Floodway'));
+                if (floodLabel) {
+                    floodLabel.style.display = 'block';
 
-            if (floodLabel) {
-                floodLabel.style.display = 'block';
+                    const input = floodLabel.querySelector('input[type="checkbox"]');
+                    floodLabel.addEventListener('click', e => {
+                        if (e.target !== input) e.preventDefault(); // ✅ Prevent label from toggling
+                    });
+                }
+            }, 150);
+        } else {
+            const floodLabel = [...document.querySelectorAll(floodLabelSelector)]
+                .find(label => label.textContent.trim().includes(floodLabelText));
 
-                const input = floodLabel.querySelector('input[type="checkbox"]');
-                floodLabel.addEventListener('click', e => {
-                    if (e.target !== input) e.preventDefault();
-                });
-            }
-        }, 100);
-    } else {
-        const floodLabel = [...document.querySelectorAll('.leaflet-control-layers-overlays label')]
-            .find(label => label.textContent.trim().includes('Regulatory Floodway'));
-
-        if (floodLabel) {
-            floodLabel.style.display = 'block';
+            if (floodLabel) floodLabel.style.display = 'block';
         }
+
+    } else {
+        if (map.hasLayer(floodway)) map.removeLayer(floodway);
+
+        const floodLabel = [...document.querySelectorAll(floodLabelSelector)]
+            .find(label => label.textContent.trim().includes(floodLabelText));
+
+        if (floodLabel) floodLabel.style.display = 'none';
     }
+});
 
-} else {
-    if (map.hasLayer(floodway)) map.removeLayer(floodway);
-
-    const floodLabel = [...document.querySelectorAll('.leaflet-control-layers-overlays label')]
-        .find(label => label.textContent.trim().includes('Regulatory Floodway'));
-
-    if (floodLabel) {
-        floodLabel.style.display = 'none';
-    }
-}
-
-
-        
-}); // closes map.on('zoomend', ...)
 
 map.whenReady(() => map.invalidateSize());
 }); // closes Promise.all(...).then...)
