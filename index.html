@@ -43,12 +43,12 @@ var esriTopo = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services
 L.control.fullscreen().addTo(map);
 
 Promise.all([
-    fetch('geojson/combined_floodzones.geojson').then(res => res.json()),
+    fetch('geojson/mississippi/rankin/floodway_4326.geojson').then(res => res.json()),
     fetch('geojson/mississippi/rankin/broadhead.geojson').then(res => res.json()),
     fetch('geojson/mississippi/rankin/holmes.geojson').then(res => res.json()),
     fetch('geojson/mississippi/rankin/nickles.geojson').then(res => res.json()),
     fetch('geojson/mississippi/rankin/nickles_broadhead.geojson').then(res => res.json())
-]).then(([floodData, broadheadData, holmesData, nicklesData, combinedData]) => {
+]).then(([floodwayData, broadheadData, holmesData, nicklesData, combinedData]) => {
 
     function popupContent(title, details, link) {
         return `<div style="font-weight:bold; font-size:1.2em;">${title}</div>
@@ -58,7 +58,7 @@ Promise.all([
                 <br><br><a href="${link}" target="_blank">→ More</a>`;
     }
 
-    var floodway = L.geoJSON(floodData, { style: { color: '#3f93ba', weight: 0, fillOpacity: 0.4 } });
+    var floodway = L.geoJSON(floodwayData, { style: { color: '#3f93ba', weight: 0, fillOpacity: 0.4 } });
     var broadhead = L.geoJSON(broadheadData, {
         style: { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.15 },
         onEachFeature: (feature, layer) => layer.bindPopup(popupContent("16.57 ac - Rankin", {
@@ -83,13 +83,22 @@ Promise.all([
             transport: "Highway access, rail nearby"
         }, 'https://jeffersonrowellproperties.com'))
     });
+    var combined = L.geoJSON(combinedData, {
+        style: { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.15 },
+        onEachFeature: (feature, layer) => layer.bindPopup(popupContent("26.47 ac - Rankin", {
+            physical: "Size: 26.47 acres (9.9 + 16.57)<br>Zoning: Industrial",
+            utilities: "Water, Sewer, Gas, Electric",
+            transport: "Direct access to I-20, I-55, Hwy 49, Hwy 80"
+        }, 'https://jeffersonrowellproperties.com'))
+    });
 
     var baseMaps = { "Streets": streets, "Satellite": satellite, "Esri Topo": esriTopo };
     var overlayMaps = {
         "9.9 ac - Rankin": nickles,
         "16.57 ac - Rankin": broadhead,
+        "26.47 ac - Rankin": combined,
         "10.39 ac - Rankin": holmes,
-        "100-year Floodmap": floodway // NEW COMBINED FLOODMAP LAYER
+        "Floodway": floodway
     };
 
     var layerControl = L.control.layers(baseMaps, overlayMaps, { collapsed: true }).addTo(map);
@@ -98,7 +107,6 @@ Promise.all([
     map.addLayer(nickles);
     map.addLayer(broadhead);
     map.addLayer(holmes);
-    map.addLayer(floodway);
 
     map.on('overlayadd', function(e) {
         if (e.name === '26.47 ac - Rankin') {
