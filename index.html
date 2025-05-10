@@ -176,48 +176,52 @@ Promise.all([
     map.on('zoomend', () => {
     const zoom = map.getZoom();
 
-    // Floodway control and layer at zoom 17+
+    // Pins: toggle visibility based on zoom
+    pins.forEach(pin => {
+        if (zoom >= 17) map.removeLayer(pin);
+        else map.addLayer(pin);
+    });
+
+    // Floodway: control visibility and add dynamically to panel
+    const floodwayCheckboxExists = Array.from(
+        document.querySelectorAll('.leaflet-control-layers-overlays label span')
+    ).some(el => el.textContent.trim() === 'Regulatory Floodway');
+
     if (zoom >= 17) {
         if (!map.hasLayer(floodway)) {
             map.addLayer(floodway);
         }
 
-        // Check if already in layer control
-        const alreadyExists = [...document.querySelectorAll('.leaflet-control-layers-overlays label span')]
-            .some(el => el.textContent.trim() === 'Floodway');
+        if (!floodwayCheckboxExists) {
+            layerControl.addOverlay(floodway, 'Regulatory Floodway');
 
-        if (!alreadyExists) {
-            // Add to control
-            layerControl.addOverlay(floodway, 'Floodway');
-
-            // Wait a moment, then force show it
+            // Ensure visibility after DOM builds
             setTimeout(() => {
                 document.querySelectorAll('.leaflet-control-layers-overlays label').forEach(label => {
-                    if (label.textContent.trim().includes('Floodway')) {
+                    if (label.textContent.trim().includes('Regulatory Floodway')) {
                         label.style.display = 'block';
                     }
                 });
             }, 300);
         } else {
-            // Already exists, ensure it's visible
+            // Checkbox already exists — make sure it's visible
             document.querySelectorAll('.leaflet-control-layers-overlays label').forEach(label => {
-                if (label.textContent.trim().includes('Floodway')) {
+                if (label.textContent.trim().includes('Regulatory Floodway')) {
                     label.style.display = 'block';
                 }
             });
         }
-
     } else {
-        // Remove layer if active
         if (map.hasLayer(floodway)) map.removeLayer(floodway);
 
-        // Hide from panel
         document.querySelectorAll('.leaflet-control-layers-overlays label').forEach(label => {
-            if (label.textContent.trim().includes('Floodway')) {
+            if (label.textContent.trim().includes('Regulatory Floodway')) {
                 label.style.display = 'none';
             }
         });
     }
+});
+
 
     // Pin toggle (no change)
     pins.forEach(pin => {
