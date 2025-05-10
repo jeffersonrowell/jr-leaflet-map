@@ -114,12 +114,14 @@ Promise.all([
     map.addLayer(broadhead);
     map.addLayer(holmes);
 
-    // Update styles when basemap changes
     map.on('baselayerchange', function() {
         [broadhead, holmes, nickles].forEach(layer => layer.setStyle(siteStyle()));
     });
 
-    // Make layer names clickable to zoom, not checkboxes
+    // Calculate combined bounds for 16.57 ac + 9.9 ac
+    var combinedBounds = nickles.getBounds().extend(broadhead.getBounds());
+
+    // Make only name spans clickable for zoom
     setTimeout(() => {
         document.querySelectorAll('.leaflet-control-layers-overlays label span').forEach(label => {
             label.style.textDecoration = 'none';
@@ -128,8 +130,11 @@ Promise.all([
             label.addEventListener('click', e => {
                 e.stopPropagation();
                 var name = label.textContent.trim();
-                var layer = layers[name];
-                if (layer) map.flyToBounds(layer.getBounds(), { maxZoom: 17 });
+                if (name === '16.57 ac - Rankin' || name === '9.9 ac - Rankin') {
+                    map.flyToBounds(combinedBounds, { maxZoom: 17 });
+                } else if (layers[name]) {
+                    map.flyToBounds(layers[name].getBounds(), { maxZoom: 17 });
+                }
             });
         });
     }, 1000);
@@ -156,4 +161,3 @@ Promise.all([
 </script>
 </body>
 </html>
-
