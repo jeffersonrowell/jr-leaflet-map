@@ -115,6 +115,17 @@ Promise.all([
     map.addLayer(holmes);
     // → DO NOT add floodway on load
 
+    // Immediately hide the Floodway checkbox if zoom is < 17
+    setTimeout(() => {
+    const initialZoom = map.getZoom();
+    document.querySelectorAll('.leaflet-control-layers-overlays label').forEach(label => {
+        if (label.textContent.trim().includes('Floodway')) {
+            label.style.display = initialZoom >= 17 ? 'block' : 'none';
+        }
+    });
+}, 500);
+
+
     map.on('baselayerchange', function() {
         [broadhead, holmes, nickles].forEach(layer => layer.setStyle(siteStyle()));
     });
