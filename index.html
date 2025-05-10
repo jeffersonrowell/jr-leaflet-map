@@ -59,7 +59,7 @@ Promise.all([
                 <br><br><a href="${link}" target="_blank">→ More</a>`;
     }
 
-    var floodway = L.geoJSON(floodwayData, { style: { color: '#3f93ba', weight: 0, fillOpacity: 0.4 } });
+    var floodwayLayer = L.geoJSON(floodwayData, { style: { color: '#3f93ba', weight: 0, fillOpacity: 0.4 } });
 
     function siteStyle() {
         var isSatellite = map.hasLayer(satellite);
@@ -104,7 +104,7 @@ Promise.all([
         "9.9 ac - Rankin": nickles,
         "16.57 ac - Rankin": broadhead,
         "10.39 ac - Rankin": holmes,
-        "Floodway": floodway
+        "Floodway": floodwayLayer
     };
 
     var layerControl = L.control.layers(baseMaps, overlayMaps, { collapsed: true }).addTo(map);
@@ -156,6 +156,17 @@ Promise.all([
     var pins = [pin1, pin2];
     map.on('zoomend', () => {
         const zoom = map.getZoom();
+
+        // Floodway control
+        if (zoom >= 17) {
+            if (!map.hasLayer(floodwayLayer)) map.addLayer(floodwayLayer);
+        } else {
+            if (map.hasLayer(floodwayLayer)) map.removeLayer(floodwayLayer);
+        }
+
+        // Example: names-only layer control (if you later want)
+        // if (zoom >= 18) { ... }
+
         pins.forEach(pin => {
             if (zoom >= 17) map.removeLayer(pin);
             else map.addLayer(pin);
@@ -166,6 +177,11 @@ Promise.all([
                 label.style.display = zoom >= 17 ? 'block' : 'none';
             }
         });
+    });
+
+    // Prevent checkboxes from causing zoom jumps
+    document.querySelectorAll('.leaflet-control-layers-selector').forEach(cb => {
+        cb.addEventListener('click', e => e.stopPropagation());
     });
 
     map.whenReady(() => map.invalidateSize());
