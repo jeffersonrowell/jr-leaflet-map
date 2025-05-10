@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>JR Leaflet Map (Updated as Requested)</title>
+    <title>JR Leaflet Map (Final with Floodway Control)</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
@@ -126,7 +126,7 @@ Promise.all([
             label.style.color = 'inherit';
             label.style.cursor = 'pointer';
             label.addEventListener('click', e => {
-                e.stopPropagation(); // prevents checkbox from toggling
+                e.stopPropagation();
                 var name = label.textContent.trim();
                 if (name === '16.57 ac - Rankin' || name === '9.9 ac - Rankin') {
                     map.flyToBounds(combinedBounds, { maxZoom: 18 });
@@ -160,6 +160,13 @@ Promise.all([
             if (zoom >= 17) map.removeLayer(pin);
             else map.addLayer(pin);
         });
+
+        // Show/hide floodway control
+        document.querySelectorAll('.leaflet-control-layers-overlays label').forEach(label => {
+            if (label.textContent.trim().includes('Floodway')) {
+                label.style.display = zoom >= 17 ? 'block' : 'none';
+            }
+        });
     });
 
     map.whenReady(() => map.invalidateSize());
@@ -167,3 +174,4 @@ Promise.all([
 </script>
 </body>
 </html>
+
