@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>JR Leaflet Map (Final Merged Version)</title>
+    <title>JR Leaflet Map (Merged Full Version)</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
@@ -18,6 +18,11 @@
             border: 2px solid white;
             box-shadow: 0 0 5px rgba(0,0,0,0.5);
         }
+        .leaflet-control-layers-overlays label span {
+            text-decoration: none !important;
+            color: inherit !important;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -33,12 +38,9 @@ var map = L.map('map', {
     markerZoomAnimation: true
 }).setView([32.5, -88], zoomLevel);
 
-var streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    subdomains: ['a', 'b', 'c'],
-    attribution: '© OpenStreetMap contributors'
-}).addTo(map);
-var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles © Esri & contributors' });
-var esriTopo = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles © Esri & contributors' });
+var streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}');
+var esriTopo = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}');
 
 L.control.fullscreen().addTo(map);
 
@@ -46,11 +48,8 @@ Promise.all([
     fetch('geojson/mississippi/rankin/floodway_4326.geojson').then(res => res.json()),
     fetch('geojson/mississippi/rankin/broadhead.geojson').then(res => res.json()),
     fetch('geojson/mississippi/rankin/holmes.geojson').then(res => res.json()),
-    fetch('geojson/mississippi/rankin/nickles.geojson').then(res => res.json()),
-    fetch('geojson/mississippi/rankin/nickles_broadhead.geojson').then(res => res.json()),
-    fetch('geojson/alabama/al_floodzones_smooth.geojson').then(res => res.json()),
-    fetch('geojson/mississippi/ms_floodzones_smooth.geojson').then(res => res.json())
-]).then(([floodwayData, broadheadData, holmesData, nicklesData, combinedData, alFloodData, msFloodData]) => {
+    fetch('geojson/mississippi/rankin/nickles.geojson').then(res => res.json())
+]).then(([floodwayData, broadheadData, holmesData, nicklesData]) => {
 
     function popupContent(title, details, link) {
         return `<div style="font-weight:bold; font-size:1.2em;">${title}</div>
@@ -61,8 +60,16 @@ Promise.all([
     }
 
     var floodway = L.geoJSON(floodwayData, { style: { color: '#3f93ba', weight: 0, fillOpacity: 0.4 } });
+
+    function siteStyle() {
+        var current = map.hasLayer(satellite);
+        return current
+            ? { color: '#8B0000', weight: 2, fillOpacity: 0 }
+            : { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.15 };
+    }
+
     var broadhead = L.geoJSON(broadheadData, {
-        style: { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.15 },
+        style: siteStyle,
         onEachFeature: (feature, layer) => layer.bindPopup(popupContent("16.57 ac - Rankin", {
             physical: "Size: 16.57 acres<br>Zoning: Industrial",
             utilities: "Water, Sewer, Gas, Electric",
@@ -70,80 +77,72 @@ Promise.all([
         }, 'https://jeffersonrowellproperties.com'))
     });
     var holmes = L.geoJSON(holmesData, {
-        style: { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.15 },
+        style: siteStyle,
         onEachFeature: (feature, layer) => layer.bindPopup(popupContent("U.S. HW 49 Frontage", {
-            physical: "10.39 acres of undeveloped commercial land",
+            physical: "10.39 acres<br>Undeveloped commercial land",
             utilities: "Water, Sewer, Gas, Electric",
             transport: "700+ feet frontage on U.S. Hwy 49"
         }, 'https://jeffersonrowellproperties.com'))
     });
     var nickles = L.geoJSON(nicklesData, {
-        style: { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.15 },
+        style: siteStyle,
         onEachFeature: (feature, layer) => layer.bindPopup(popupContent("9.9 ac - Rankin", {
             physical: "Size: 9.9 acres<br>Zoning: Industrial",
             utilities: "Water, Sewer, Gas, Electric",
             transport: "Highway access, rail nearby"
         }, 'https://jeffersonrowellproperties.com'))
     });
-    var combined = L.geoJSON(combinedData, {
-        style: { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.15 }
-    });
 
-    var alFlood = L.geoJSON(alFloodData, { style: { color: '#3f93ba', weight: 1, fillOpacity: 0.4 } });
-    var msFlood = L.geoJSON(msFloodData, { style: { color: '#3f93ba', weight: 1, fillOpacity: 0.4 } });
+    var layers = {
+        "9.9 ac - Rankin": nickles,
+        "16.57 ac - Rankin": broadhead,
+        "10.39 ac - Rankin": holmes
+    };
 
     var baseMaps = { "Streets": streets, "Satellite": satellite, "Esri Topo": esriTopo };
     var overlayMaps = {
         "9.9 ac - Rankin": nickles,
         "16.57 ac - Rankin": broadhead,
-        "26.47 ac - Rankin": combined,
         "10.39 ac - Rankin": holmes,
-        "Floodway": floodway,
-        "Alabama Flood Zones": alFlood,
-        "Mississippi Flood Zones": msFlood
+        "Floodway": floodway
     };
 
-    var layerControl = L.control.layers(baseMaps, overlayMaps, { collapsed: true }).addTo(map);
+    var layerControl = L.control.layers(baseMaps, overlayMaps, { collapsed: false }).addTo(map);
     L.control.scale({ position: 'bottomleft', imperial: true, metric: false }).addTo(map);
 
     map.addLayer(nickles);
     map.addLayer(broadhead);
     map.addLayer(holmes);
 
-    map.on('overlayadd', function(e) {
-        if (e.name === '26.47 ac - Rankin') {
-            if (map.hasLayer(nickles)) { map.removeLayer(nickles); uncheckBox('9.9 ac - Rankin'); }
-            if (map.hasLayer(broadhead)) { map.removeLayer(broadhead); uncheckBox('16.57 ac - Rankin'); }
-        }
-        if (e.name === '9.9 ac - Rankin' || e.name === '16.57 ac - Rankin') {
-            if (map.hasLayer(combined)) { map.removeLayer(combined); uncheckBox('26.47 ac - Rankin'); }
-        }
+    // Update style when basemap changes
+    map.on('baselayerchange', function(e) {
+        [broadhead, holmes, nickles].forEach(function(layer) {
+            layer.setStyle(siteStyle());
+        });
     });
 
-    function uncheckBox(name) {
-        document.querySelectorAll('.leaflet-control-layers-overlays label').forEach(label => {
-            if (label.textContent.includes(name)) {
-                let checkbox = label.querySelector('input');
-                if (checkbox.checked) checkbox.click();
-            }
+    // Make layer names clickable to zoom
+    setTimeout(() => {
+        document.querySelectorAll('.leaflet-control-layers-overlays label span').forEach(label => {
+            label.style.textDecoration = 'none';
+            label.style.color = 'inherit';
+            label.style.cursor = 'pointer';
+            label.addEventListener('click', e => {
+                e.stopPropagation();
+                var name = label.textContent.trim();
+                var layer = layers[name];
+                if (layer) map.flyToBounds(layer.getBounds(), { maxZoom: 17 });
+            });
         });
-    }
+    }, 1000);
 
     var pin1 = L.marker([32.174586, -90.135014], {
         icon: L.divIcon({ className: 'custom-marker' })
-    }).addTo(map).bindPopup(popupContent("U.S. HW 49 Frontage", {
-        physical: "10.39 acres of undeveloped commercial land",
-        utilities: "Water, Sewer, Gas, Electric",
-        transport: "700+ feet frontage on U.S. Hwy 49"
-    }, 'https://jeffersonrowellproperties.com'));
+    }).addTo(map).bindPopup("U.S. HW 49 Frontage");
 
     var pin2 = L.marker([32.260453, -90.144217], {
         icon: L.divIcon({ className: 'custom-marker' })
-    }).addTo(map).bindPopup(popupContent("Crossroads of Mississippi", {
-        physical: "Two adjacent tracts totaling 26.47 acres (9.9 acres & 16.57 acres)",
-        utilities: "Water, Sewer, Gas, Electric",
-        transport: "Direct access to I-20, I-55, Hwy 49 & Hwy 80"
-    }, 'https://jeffersonrowellproperties.com'));
+    }).addTo(map).bindPopup("Crossroads of Mississippi");
 
     var pins = [pin1, pin2];
     map.on('zoomend', () => {
