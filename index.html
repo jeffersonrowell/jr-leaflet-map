@@ -197,17 +197,18 @@ Promise.all([
     if (zoom >= 17) {
         if (!map.hasLayer(floodway)) map.addLayer(floodway);
 
-        if (!floodwayExists) {
-            layerControl.addOverlay(floodway, 'Regulatory Floodway');
+        if (!floodwayExists && zoom >= 17) {
+    layerControl.addOverlay(floodway, 'Regulatory Floodway');
 
-            setTimeout(() => {
-                document.querySelectorAll('.leaflet-control-layers-overlays label').forEach(label => {
-                    if (label.textContent.trim().includes('Regulatory Floodway')) {
-                        label.style.display = 'block';
-                    }
-                });
-            }, 100);
-        }
+    setTimeout(() => {
+        document.querySelectorAll('.leaflet-control-layers-overlays label').forEach(label => {
+            if (label.textContent.trim().includes('Regulatory Floodway')) {
+                label.style.display = 'block';
+            }
+        });
+    }, 100);
+}
+
     } else {
         if (map.hasLayer(floodway)) map.removeLayer(floodway);
 
