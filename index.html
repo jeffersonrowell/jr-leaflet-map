@@ -173,30 +173,29 @@ Promise.all([
 
     var pins = [pin1, pin2];
 
-  map.on('zoomend', () => {
+    map.on('zoomend', () => {
     const zoom = map.getZoom();
 
-    // If zoomed in close enough, add Floodway and show in control
+    // Handle Floodway layer and checkbox at zoom ≥ 17
     if (zoom >= 17) {
-        if (!map.hasLayer(floodway)) map.addLayer(floodway);
+        if (!map.hasLayer(floodway)) {
+            map.addLayer(floodway);
+        }
 
-        // Add it to the layer control if not already there
-        if (!document.querySelector('.leaflet-control-layers-overlays label span.floodway-added')) {
+        // Dynamically add to layer control if not already there
+        const floodwayExists = Array.from(document.querySelectorAll('.leaflet-control-layers-overlays label span'))
+            .some(label => label.textContent.trim() === 'Floodway');
+
+        if (!floodwayExists) {
             layerControl.addOverlay(floodway, "Floodway");
-
-            // Mark the span for detection so we don't re-add
-            setTimeout(() => {
-                document.querySelectorAll('.leaflet-control-layers-overlays label span').forEach(label => {
-                    if (label.textContent.trim() === 'Floodway') {
-                        label.classList.add('floodway-added');
-                    }
-                });
-            }, 100);
         }
     } else {
-        if (map.hasLayer(floodway)) map.removeLayer(floodway);
+        // Remove Floodway layer if active
+        if (map.hasLayer(floodway)) {
+            map.removeLayer(floodway);
+        }
 
-        // Hide Floodway checkbox from control if zoomed out
+        // Hide the checkbox manually if present
         document.querySelectorAll('.leaflet-control-layers-overlays label').forEach(label => {
             if (label.textContent.trim().includes('Floodway')) {
                 label.style.display = 'none';
@@ -204,12 +203,16 @@ Promise.all([
         });
     }
 
-    // Pins
+    // Pins logic (unchanged)
     pins.forEach(pin => {
-        if (zoom >= 17) map.removeLayer(pin);
-        else map.addLayer(pin);
+        if (zoom >= 17) {
+            map.removeLayer(pin);
+        } else {
+            map.addLayer(pin);
+        }
     });
 });
+
 
     map.whenReady(() => map.invalidateSize());
 });
