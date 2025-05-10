@@ -113,12 +113,13 @@ Promise.all([
     map.addLayer(nickles);
     map.addLayer(broadhead);
     map.addLayer(holmes);
+    // → DO NOT add floodway on load
 
     map.on('baselayerchange', function() {
         [broadhead, holmes, nickles].forEach(layer => layer.setStyle(siteStyle()));
     });
 
-    var combinedBounds = nickles.getBounds().extend(broadhead.getBounds()).extend(holmes.getBounds());
+    var combinedBounds = nickles.getBounds().extend(broadhead.getBounds());
 
     setTimeout(() => {
         document.querySelectorAll('.leaflet-control-layers-overlays label span').forEach(label => {
@@ -129,13 +130,12 @@ Promise.all([
                 e.stopPropagation();
                 var name = label.textContent.trim();
                 if (name === '16.57 ac - Rankin' || name === '9.9 ac - Rankin') {
-                    map.flyToBounds(combinedBounds, { maxZoom: 16 });
+                    map.flyToBounds(combinedBounds, { maxZoom: 15 }); // ← use maxZoom 15 here
                 } else if (name === '10.39 ac - Rankin') {
                     map.flyToBounds(holmes.getBounds(), { maxZoom: 16 });
                 } else if (layers[name]) {
                     map.flyToBounds(layers[name].getBounds(), { maxZoom: 16 });
                 }
-
             });
         });
     }, 1000);
@@ -165,23 +165,19 @@ Promise.all([
     map.on('zoomend', () => {
         const zoom = map.getZoom();
 
-        // Floodway layer + checkbox control
-        if (zoom >= 17) {
-            if (!map.hasLayer(floodway)) map.addLayer(floodway);
-        } else {
-            if (map.hasLayer(floodway)) map.removeLayer(floodway);
-        }
-
         document.querySelectorAll('.leaflet-control-layers-overlays label').forEach(label => {
             if (label.textContent.trim().includes('Floodway')) {
                 label.style.display = zoom >= 17 ? 'block' : 'none';
             }
         });
 
-        pins.forEach(pin => {
-            if (zoom >= 17) map.removeLayer(pin);
-            else map.addLayer(pin);
-        });
+        if (zoom >= 17) {
+            if (!map.hasLayer(floodway)) map.addLayer(floodway);
+            pins.forEach(pin => map.removeLayer(pin));
+        } else {
+            if (map.hasLayer(floodway)) map.removeLayer(floodway);
+            pins.forEach(pin => map.addLayer(pin));
+        }
     });
 
     map.whenReady(() => map.invalidateSize());
@@ -189,3 +185,4 @@ Promise.all([
 </script>
 </body>
 </html>
+
