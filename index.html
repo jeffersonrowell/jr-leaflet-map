@@ -149,21 +149,24 @@ Promise.all([
 
         // Prevent checkbox toggle and zoom to site
         span.addEventListener('click', e => {
-            e.preventDefault();
-            e.stopPropagation(); // ✅ Fully blocks checkbox toggle
+    e.preventDefault();
+    e.stopPropagation();
 
-            const name = span.textContent.trim();
+    const name = span.textContent.trim();
 
-            if (name === '16.57 ac - Rankin' || name === '9.9 ac - Rankin') {
-                map.flyToBounds(combinedBounds, { maxZoom: 15 });
-            } else if (name === '10.39 ac - Rankin') {
-                map.flyToBounds(holmes.getBounds(), { maxZoom: 16 });
-            } else if (layers[name]) {
-                map.flyToBounds(layers[name].getBounds(), { maxZoom: 16 });
-            }
+    if (name === '16.57 ac - Rankin' || name === '9.9 ac - Rankin') {
+        map.flyToBounds(combinedBounds, { maxZoom: 15 });
+    } else if (name === '10.39 ac - Rankin') {
+        map.flyToBounds(holmes.getBounds(), { maxZoom: 16 });
+    } else if (layers[name]) {
+        map.flyToBounds(layers[name].getBounds(), { maxZoom: 16 });
+    }
 
-            return false; // ← ✅ helps prevent any residual default behavior
-        });
+    setTimeout(updateFloodwaysControl, 750); // ✅ ensures checkbox appears after zoom
+
+    return false;
+});
+
     });
 }, 1000);
 
@@ -189,43 +192,83 @@ Promise.all([
     }, 'https://jeffersonrowellproperties.com'));
 
     var pins = [pin1, pin2];
-    
-    map.on('zoomend', () => {
+    function updateFloodwaysControl() {
     const zoom = map.getZoom();
+    const labelText = 'Floodways';
 
-    // 🎯 Manage pin visibility
-    pins.forEach(pin => {
-        if (zoom >= 17) map.removeLayer(pin);
-        else map.addLayer(pin);
-    });
-
-    // 🎯 Floodway logic
-    const floodLabelText = 'Floodways';
-    const floodLabelSelector = '.leaflet-control-layers-overlays label';
-
-    const labelExists = [...document.querySelectorAll(floodLabelSelector + ' span')]
-        .some(el => el.textContent.trim() === floodLabelText);
+    const checkboxExists = [...document.querySelectorAll('.leaflet-control-layers-overlays label span')]
+        .some(el => el.textContent.trim() === labelText);
 
     if (zoom >= 17) {
-        if (!labelExists) {
-            layerControl.addOverlay(floodway, floodLabelText);
+        if (!checkboxExists) {
+            layerControl.addOverlay(floodway, labelText);
 
             setTimeout(() => {
-                const floodLabel = [...document.querySelectorAll(floodLabelSelector)]
-                    .find(label => label.textContent.trim().includes(floodLabelText));
+                const floodLabel = [...document.querySelectorAll('.leaflet-control-layers-overlays label')]
+                    .find(label => label.textContent.trim().includes(labelText));
 
                 if (floodLabel) {
                     floodLabel.style.display = 'block';
 
                     const input = floodLabel.querySelector('input[type="checkbox"]');
                     floodLabel.addEventListener('click', e => {
-                        if (e.target !== input) e.preventDefault(); // ✅ Prevent label from toggling
+                        if (e.target !== input) e.preventDefault();
                     });
                 }
             }, 150);
         } else {
-            const floodLabel = [...document.querySelectorAll(floodLabelSelector)]
-                .find(label => label.textContent.trim().includes(floodLabelText));
+            const floodLabel = [...document.querySelectorAll('.leaflet-control-layers-overlays label')]
+                .find(label => label.textContent.trim().includes(labelText));
+
+            if (floodLabel) floodLabel.style.display = 'block';
+        }
+    } else {
+        if (map.hasLayer(floodway)) map.removeLayer(floodway);
+
+        const floodLabel = [...document.querySelectorAll('.leaflet-control-layers-overlays label')]
+            .find(label => label.textContent.trim().includes(labelText));
+
+        if (floodLabel) floodLabel.style.display = 'none';
+    }
+}
+
+map.on('zoomend', () => {
+    pins.forEach(pin => {
+        if (map.getZoom() >= 17) map.removeLayer(pin);
+        else map.addLayer(pin);
+    });
+
+    updateFloodwaysControl(); // ✅ now always runs on zoom
+});
+
+    // 🎯 Floodway logic
+    function updateFloodwaysControl() {
+    const zoom = map.getZoom();
+    const labelText = 'Floodways';
+
+    const checkboxExists = [...document.querySelectorAll('.leaflet-control-layers-overlays label span')]
+        .some(el => el.textContent.trim() === labelText);
+
+    if (zoom >= 17) {
+        if (!checkboxExists) {
+            layerControl.addOverlay(floodway, labelText);
+
+            setTimeout(() => {
+                const floodLabel = [...document.querySelectorAll('.leaflet-control-layers-overlays label')]
+                    .find(label => label.textContent.trim().includes(labelText));
+
+                if (floodLabel) {
+                    floodLabel.style.display = 'block';
+
+                    const input = floodLabel.querySelector('input[type="checkbox"]');
+                    floodLabel.addEventListener('click', e => {
+                        if (e.target !== input) e.preventDefault();
+                    });
+                }
+            }, 150);
+        } else {
+            const floodLabel = [...document.querySelectorAll('.leaflet-control-layers-overlays label')]
+                .find(label => label.textContent.trim().includes(labelText));
 
             if (floodLabel) floodLabel.style.display = 'block';
         }
@@ -233,20 +276,24 @@ Promise.all([
     } else {
         if (map.hasLayer(floodway)) map.removeLayer(floodway);
 
-        const floodLabel = [...document.querySelectorAll(floodLabelSelector)]
-            .find(label => label.textContent.trim().includes(floodLabelText));
+        const floodLabel = [...document.querySelectorAll('.leaflet-control-layers-overlays label')]
+            .find(label => label.textContent.trim().includes(labelText));
 
         if (floodLabel) floodLabel.style.display = 'none';
     }
+}
+
+map.on('zoomend', () => {
+    pins.forEach(pin => {
+        if (map.getZoom() >= 17) map.removeLayer(pin);
+        else map.addLayer(pin);
+    });
+
+    updateFloodwaysControl();
 });
 
-
 map.whenReady(() => map.invalidateSize());
-}); // closes Promise.all(...).then...)
-
+}); // ✅ add this to close the Promise.all(...).then(...)
 </script>
 </body>
 </html>
-
-
-
