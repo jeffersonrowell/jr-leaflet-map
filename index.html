@@ -228,7 +228,7 @@ Promise.all([
             }
         });
     }
-});
+
 
 
     // Pin toggle (no change)
@@ -239,9 +239,10 @@ Promise.all([
 });
 
 
-    map.whenReady(() => map.invalidateSize());
-});
+map.whenReady(() => map.invalidateSize());
+}); // closes Promise.all(...).then...)
 </script>
 </body>
 </html>
+
 
