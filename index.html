@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>JR Leaflet Map (Final Merged)</title>
+    <title>JR Leaflet Map (Final Merged, Corrected)</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
@@ -38,11 +38,12 @@ var esriTopo = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services
 
 L.control.fullscreen().addTo(map);
 
+// Corrected floodmap paths
 var alFloodLayer, msFloodLayer;
-fetch('al_floodzones_smooth.geojson').then(res => res.json()).then(data => {
+fetch('alabama/al_floodzones_smooth.geojson').then(res => res.json()).then(data => {
     alFloodLayer = L.geoJSON(data, { style: { color: '#3f93ba', weight: 1, fillOpacity: 0.4 } });
 });
-fetch('ms_floodzones_smooth.geojson').then(res => res.json()).then(data => {
+fetch('mississippi/ms_floodzones_smooth.geojson').then(res => res.json()).then(data => {
     msFloodLayer = L.geoJSON(data, { style: { color: '#3f93ba', weight: 1, fillOpacity: 0.4 } });
 });
 
