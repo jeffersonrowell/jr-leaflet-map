@@ -199,10 +199,8 @@ Promise.all([
     });
 
     // Floodway layer visibility and checkbox control
-if (zoom >= 17) {
-    if (!map.hasLayer(floodway)) map.addLayer(floodway);
-
-    // Only add checkbox once when zoomed in
+    // Floodway layer visibility and checkbox control
+    if (zoom >= 17) {
     const checkboxExists = [...document.querySelectorAll('.leaflet-control-layers-overlays label span')]
         .some(el => el.textContent.trim() === 'Regulatory Floodway');
 
@@ -210,31 +208,38 @@ if (zoom >= 17) {
         layerControl.addOverlay(floodway, 'Regulatory Floodway');
 
         setTimeout(() => {
-            document.querySelectorAll('.leaflet-control-layers-overlays label').forEach(label => {
-                if (label.textContent.trim().includes('Regulatory Floodway')) {
-                    label.style.display = 'block';
-                }
-            });
+            const floodLabel = [...document.querySelectorAll('.leaflet-control-layers-overlays label')]
+                .find(label => label.textContent.trim().includes('Regulatory Floodway'));
+
+            if (floodLabel) {
+                floodLabel.style.display = 'block';
+
+                const input = floodLabel.querySelector('input[type="checkbox"]');
+                floodLabel.addEventListener('click', e => {
+                    if (e.target !== input) e.preventDefault();
+                });
+            }
         }, 100);
     } else {
-        // Make sure it’s visible
-        document.querySelectorAll('.leaflet-control-layers-overlays label').forEach(label => {
-            if (label.textContent.trim().includes('Regulatory Floodway')) {
-                label.style.display = 'block';
-            }
-        });
+        const floodLabel = [...document.querySelectorAll('.leaflet-control-layers-overlays label')]
+            .find(label => label.textContent.trim().includes('Regulatory Floodway'));
+
+        if (floodLabel) {
+            floodLabel.style.display = 'block';
+        }
     }
 
 } else {
-    // Zoomed out — remove floodway and hide checkbox
     if (map.hasLayer(floodway)) map.removeLayer(floodway);
 
-    document.querySelectorAll('.leaflet-control-layers-overlays label').forEach(label => {
-        if (label.textContent.trim().includes('Regulatory Floodway')) {
-            label.style.display = 'none';
-        }
-    });
+    const floodLabel = [...document.querySelectorAll('.leaflet-control-layers-overlays label')]
+        .find(label => label.textContent.trim().includes('Regulatory Floodway'));
+
+    if (floodLabel) {
+        floodLabel.style.display = 'none';
+    }
 }
+
 
         
 }); // closes map.on('zoomend', ...)
