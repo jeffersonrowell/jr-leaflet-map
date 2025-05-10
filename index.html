@@ -133,23 +133,27 @@ Promise.all([
     var combinedBounds = nickles.getBounds().extend(broadhead.getBounds());
 
     setTimeout(() => {
-        document.querySelectorAll('.leaflet-control-layers-overlays label span').forEach(label => {
-            label.style.textDecoration = 'none';
-            label.style.color = 'inherit';
-            label.style.cursor = 'pointer';
-            label.addEventListener('click', e => {
-                e.stopPropagation();
-                var name = label.textContent.trim();
-                if (name === '16.57 ac - Rankin' || name === '9.9 ac - Rankin') {
-                    map.flyToBounds(combinedBounds, { maxZoom: 15 }); // ← use maxZoom 15 here
-                } else if (name === '10.39 ac - Rankin') {
-                    map.flyToBounds(holmes.getBounds(), { maxZoom: 16 });
-                } else if (layers[name]) {
-                    map.flyToBounds(layers[name].getBounds(), { maxZoom: 16 });
-                }
-            });
+    document.querySelectorAll('.leaflet-control-layers-overlays label span').forEach(label => {
+        label.style.textDecoration = 'none';
+        label.style.color = 'inherit';
+        label.style.cursor = 'pointer';
+
+        // Prevent checkbox toggle when clicking the name
+        label.addEventListener('click', e => {
+            e.stopPropagation(); // ✅ This is the key fix
+            var name = label.textContent.trim();
+
+            if (name === '16.57 ac - Rankin' || name === '9.9 ac - Rankin') {
+                map.flyToBounds(combinedBounds, { maxZoom: 15 });
+            } else if (name === '10.39 ac - Rankin') {
+                map.flyToBounds(holmes.getBounds(), { maxZoom: 16 });
+            } else if (layers[name]) {
+                map.flyToBounds(layers[name].getBounds(), { maxZoom: 16 });
+            }
         });
-    }, 1000);
+    });
+}, 1000);
+
 
     document.querySelectorAll('.leaflet-control-layers-selector').forEach(cb => {
         cb.addEventListener('click', e => e.stopPropagation());
