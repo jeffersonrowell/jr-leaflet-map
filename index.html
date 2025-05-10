@@ -133,15 +133,17 @@ Promise.all([
     var combinedBounds = nickles.getBounds().extend(broadhead.getBounds());
 
     setTimeout(() => {
-    document.querySelectorAll('.leaflet-control-layers-overlays label span').forEach(label => {
-        label.style.textDecoration = 'none';
-        label.style.color = 'inherit';
-        label.style.cursor = 'pointer';
+    document.querySelectorAll('.leaflet-control-layers-overlays label span').forEach(span => {
+        span.style.textDecoration = 'none';
+        span.style.color = 'inherit';
+        span.style.cursor = 'pointer';
 
-        // Prevent checkbox toggle when clicking the name
-        label.addEventListener('click', e => {
-            e.stopPropagation(); // ✅ This is the key fix
-            var name = label.textContent.trim();
+        // Prevent checkbox toggle and zoom to site
+        span.addEventListener('click', e => {
+            e.preventDefault();
+            e.stopPropagation(); // ✅ Fully blocks checkbox toggle
+
+            const name = span.textContent.trim();
 
             if (name === '16.57 ac - Rankin' || name === '9.9 ac - Rankin') {
                 map.flyToBounds(combinedBounds, { maxZoom: 15 });
@@ -150,6 +152,8 @@ Promise.all([
             } else if (layers[name]) {
                 map.flyToBounds(layers[name].getBounds(), { maxZoom: 16 });
             }
+
+            return false; // ← ✅ helps prevent any residual default behavior
         });
     });
 }, 1000);
