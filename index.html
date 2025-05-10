@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>JR Leaflet Map (Final Fixed)</title>
+    <title>JR Leaflet Map (Final Merged)</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
@@ -26,29 +26,32 @@
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js"></script>
 <script>
-var zoomLevel = window.innerWidth < 768 ? 6 : 7;
 var map = L.map('map', {
     zoomAnimation: true,
     fadeAnimation: true,
     markerZoomAnimation: true
-}).setView([32.5, -88], zoomLevel);
+}).setView([32.5, -88], window.innerWidth < 768 ? 6 : 7);
 
-var streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    subdomains: ['a', 'b', 'c'],
-    attribution: '© OpenStreetMap contributors'
-}).addTo(map);
-var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles © Esri & contributors' });
-var esriTopo = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles © Esri & contributors' });
+var streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}');
+var esriTopo = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}');
 
 L.control.fullscreen().addTo(map);
+
+var alFloodLayer, msFloodLayer;
+fetch('al_floodzones_smooth.geojson').then(res => res.json()).then(data => {
+    alFloodLayer = L.geoJSON(data, { style: { color: '#3f93ba', weight: 1, fillOpacity: 0.4 } });
+});
+fetch('ms_floodzones_smooth.geojson').then(res => res.json()).then(data => {
+    msFloodLayer = L.geoJSON(data, { style: { color: '#3f93ba', weight: 1, fillOpacity: 0.4 } });
+});
 
 Promise.all([
     fetch('geojson/mississippi/rankin/floodway_4326.geojson').then(res => res.json()),
     fetch('geojson/mississippi/rankin/broadhead.geojson').then(res => res.json()),
     fetch('geojson/mississippi/rankin/holmes.geojson').then(res => res.json()),
-    fetch('geojson/mississippi/rankin/nickles.geojson').then(res => res.json()),
-    fetch('geojson/mississippi/rankin/nickles_broadhead.geojson').then(res => res.json())
-]).then(([floodwayData, broadheadData, holmesData, nicklesData, combinedData]) => {
+    fetch('geojson/mississippi/rankin/nickles.geojson').then(res => res.json())
+]).then(([floodwayData, broadheadData, holmesData, nicklesData]) => {
 
     function popupContent(title, details, link) {
         return `<div style="font-weight:bold; font-size:1.2em;">${title}</div>
@@ -83,20 +86,11 @@ Promise.all([
             transport: "Highway access, rail nearby"
         }, 'https://jeffersonrowellproperties.com'))
     });
-    var combined = L.geoJSON(combinedData, {
-        style: { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.15 },
-        onEachFeature: (feature, layer) => layer.bindPopup(popupContent("26.47 ac - Rankin", {
-            physical: "Size: 26.47 acres (9.9 + 16.57)<br>Zoning: Industrial",
-            utilities: "Water, Sewer, Gas, Electric",
-            transport: "Direct access to I-20, I-55, Hwy 49, Hwy 80"
-        }, 'https://jeffersonrowellproperties.com'))
-    });
 
     var baseMaps = { "Streets": streets, "Satellite": satellite, "Esri Topo": esriTopo };
     var overlayMaps = {
         "9.9 ac - Rankin": nickles,
         "16.57 ac - Rankin": broadhead,
-        "26.47 ac - Rankin": combined,
         "10.39 ac - Rankin": holmes,
         "Floodway": floodway
     };
@@ -109,23 +103,23 @@ Promise.all([
     map.addLayer(holmes);
 
     map.on('overlayadd', function(e) {
-        if (e.name === '26.47 ac - Rankin') {
-            if (map.hasLayer(nickles)) { map.removeLayer(nickles); uncheckBox('9.9 ac - Rankin'); }
-            if (map.hasLayer(broadhead)) { map.removeLayer(broadhead); uncheckBox('16.57 ac - Rankin'); }
-        }
-        if (e.name === '9.9 ac - Rankin' || e.name === '16.57 ac - Rankin') {
-            if (map.hasLayer(combined)) { map.removeLayer(combined); uncheckBox('26.47 ac - Rankin'); }
-        }
+        if (e.name.includes('Alabama') && alFloodLayer) map.addLayer(alFloodLayer);
+        if (e.name.includes('Mississippi') && msFloodLayer) map.addLayer(msFloodLayer);
     });
 
-    function uncheckBox(name) {
-        document.querySelectorAll('.leaflet-control-layers-overlays label').forEach(label => {
-            if (label.textContent.includes(name)) {
-                let checkbox = label.querySelector('input');
-                if (checkbox.checked) checkbox.click();
-            }
+    map.on('overlayremove', function(e) {
+        if (e.name.includes('Alabama') && alFloodLayer) map.removeLayer(alFloodLayer);
+        if (e.name.includes('Mississippi') && msFloodLayer) map.removeLayer(msFloodLayer);
+    });
+
+    map.on('baselayerchange', function(e) {
+        var isSatellite = e.name === 'Satellite';
+        [broadhead, holmes, nickles].forEach(layer => {
+            layer.setStyle(isSatellite
+                ? { color: '#8B0000', weight: 2, fillOpacity: 0 }
+                : { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.15 });
         });
-    }
+    });
 
     var pin1 = L.marker([32.174586, -90.135014], {
         icon: L.divIcon({ className: 'custom-marker' })
