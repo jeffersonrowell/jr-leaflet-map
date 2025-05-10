@@ -126,7 +126,7 @@ Promise.all([
             label.style.color = 'inherit';
             label.style.cursor = 'pointer';
             label.addEventListener('click', e => {
-                e.stopPropagation();
+                e.stopPropagation(); // prevents checkbox from toggling
                 var name = label.textContent.trim();
                 if (name === '16.57 ac - Rankin' || name === '9.9 ac - Rankin') {
                     map.flyToBounds(combinedBounds, { maxZoom: 18 });
