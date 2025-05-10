@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>JR Leaflet Map (Merged Full Version)</title>
+    <title>JR Leaflet Map (Updated as Requested)</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
@@ -62,9 +62,9 @@ Promise.all([
     var floodway = L.geoJSON(floodwayData, { style: { color: '#3f93ba', weight: 0, fillOpacity: 0.4 } });
 
     function siteStyle() {
-        var current = map.hasLayer(satellite);
-        return current
-            ? { color: '#8B0000', weight: 2, fillOpacity: 0 }
+        var isSatellite = map.hasLayer(satellite);
+        return isSatellite
+            ? { color: '#8B0000', weight: 4, fillOpacity: 0 }
             : { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.15 };
     }
 
@@ -79,7 +79,7 @@ Promise.all([
     var holmes = L.geoJSON(holmesData, {
         style: siteStyle,
         onEachFeature: (feature, layer) => layer.bindPopup(popupContent("U.S. HW 49 Frontage", {
-            physical: "10.39 acres<br>Undeveloped commercial land",
+            physical: "10.39 acres of undeveloped commercial land",
             utilities: "Water, Sewer, Gas, Electric",
             transport: "700+ feet frontage on U.S. Hwy 49"
         }, 'https://jeffersonrowellproperties.com'))
@@ -107,21 +107,19 @@ Promise.all([
         "Floodway": floodway
     };
 
-    var layerControl = L.control.layers(baseMaps, overlayMaps, { collapsed: false }).addTo(map);
+    var layerControl = L.control.layers(baseMaps, overlayMaps, { collapsed: true }).addTo(map);
     L.control.scale({ position: 'bottomleft', imperial: true, metric: false }).addTo(map);
 
     map.addLayer(nickles);
     map.addLayer(broadhead);
     map.addLayer(holmes);
 
-    // Update style when basemap changes
-    map.on('baselayerchange', function(e) {
-        [broadhead, holmes, nickles].forEach(function(layer) {
-            layer.setStyle(siteStyle());
-        });
+    // Update styles when basemap changes
+    map.on('baselayerchange', function() {
+        [broadhead, holmes, nickles].forEach(layer => layer.setStyle(siteStyle()));
     });
 
-    // Make layer names clickable to zoom
+    // Make layer names clickable to zoom, not checkboxes
     setTimeout(() => {
         document.querySelectorAll('.leaflet-control-layers-overlays label span').forEach(label => {
             label.style.textDecoration = 'none';
@@ -158,3 +156,4 @@ Promise.all([
 </script>
 </body>
 </html>
+
