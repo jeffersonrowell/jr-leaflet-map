@@ -59,7 +59,7 @@ Promise.all([
                 <br><br><a href="${link}" target="_blank">→ More</a>`;
     }
 
-    var floodway = L.geoJSON(floodwayData, { style: { color: '#3f93ba', weight: 0, fillOpacity: 0.4 } });
+    var floodway = L.geoJSON(floodwayData, { style: { color: '#3f93ba', weight: 1.5, fillOpacity: 0.4 } });
 
     function siteStyle() {
         var isSatellite = map.hasLayer(satellite);
@@ -176,31 +176,30 @@ Promise.all([
     map.on('zoomend', () => {
     const zoom = map.getZoom();
 
-    // Zoomed in close enough (1000ft = zoom 17+)
+    // Floodway control and layer at zoom 17+
     if (zoom >= 17) {
-        // Add the layer if not active
         if (!map.hasLayer(floodway)) {
             map.addLayer(floodway);
         }
 
-        // If checkbox isn't already added, do it now
-        const checkboxExists = Array.from(document.querySelectorAll('.leaflet-control-layers-overlays label span'))
+        // Check if already in layer control
+        const alreadyExists = [...document.querySelectorAll('.leaflet-control-layers-overlays label span')]
             .some(el => el.textContent.trim() === 'Floodway');
 
-        if (!checkboxExists) {
-            // Add it to the control
+        if (!alreadyExists) {
+            // Add to control
             layerControl.addOverlay(floodway, 'Floodway');
 
-            // Delay the reveal slightly so the DOM can update
+            // Wait a moment, then force show it
             setTimeout(() => {
                 document.querySelectorAll('.leaflet-control-layers-overlays label').forEach(label => {
                     if (label.textContent.trim().includes('Floodway')) {
                         label.style.display = 'block';
                     }
                 });
-            }, 250);
+            }, 300);
         } else {
-            // Ensure it's visible
+            // Already exists, ensure it's visible
             document.querySelectorAll('.leaflet-control-layers-overlays label').forEach(label => {
                 if (label.textContent.trim().includes('Floodway')) {
                     label.style.display = 'block';
@@ -209,12 +208,10 @@ Promise.all([
         }
 
     } else {
-        // Zoomed out — remove floodway layer
-        if (map.hasLayer(floodway)) {
-            map.removeLayer(floodway);
-        }
+        // Remove layer if active
+        if (map.hasLayer(floodway)) map.removeLayer(floodway);
 
-        // Hide checkbox if present
+        // Hide from panel
         document.querySelectorAll('.leaflet-control-layers-overlays label').forEach(label => {
             if (label.textContent.trim().includes('Floodway')) {
                 label.style.display = 'none';
@@ -222,7 +219,7 @@ Promise.all([
         });
     }
 
-    // Keep pin behavior the same
+    // Pin toggle (no change)
     pins.forEach(pin => {
         if (zoom >= 17) map.removeLayer(pin);
         else map.addLayer(pin);
