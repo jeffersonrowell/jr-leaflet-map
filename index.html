@@ -118,10 +118,8 @@ Promise.all([
         [broadhead, holmes, nickles].forEach(layer => layer.setStyle(siteStyle()));
     });
 
-    // Calculate combined bounds for 16.57 ac + 9.9 ac
     var combinedBounds = nickles.getBounds().extend(broadhead.getBounds());
 
-    // Make only name spans clickable for zoom
     setTimeout(() => {
         document.querySelectorAll('.leaflet-control-layers-overlays label span').forEach(label => {
             label.style.textDecoration = 'none';
@@ -131,9 +129,9 @@ Promise.all([
                 e.stopPropagation();
                 var name = label.textContent.trim();
                 if (name === '16.57 ac - Rankin' || name === '9.9 ac - Rankin') {
-                    map.flyToBounds(combinedBounds, { maxZoom: 17 });
+                    map.flyToBounds(combinedBounds, { maxZoom: 18 });
                 } else if (layers[name]) {
-                    map.flyToBounds(layers[name].getBounds(), { maxZoom: 17 });
+                    map.flyToBounds(layers[name].getBounds(), { maxZoom: 18 });
                 }
             });
         });
@@ -141,11 +139,19 @@ Promise.all([
 
     var pin1 = L.marker([32.174586, -90.135014], {
         icon: L.divIcon({ className: 'custom-marker' })
-    }).addTo(map).bindPopup("U.S. HW 49 Frontage");
+    }).addTo(map).bindPopup(popupContent("U.S. HW 49 Frontage", {
+        physical: "10.39 acres of undeveloped commercial land",
+        utilities: "Water, Sewer, Gas, Electric",
+        transport: "700+ feet frontage on U.S. Hwy 49"
+    }, 'https://jeffersonrowellproperties.com'));
 
     var pin2 = L.marker([32.260453, -90.144217], {
         icon: L.divIcon({ className: 'custom-marker' })
-    }).addTo(map).bindPopup("Crossroads of Mississippi");
+    }).addTo(map).bindPopup(popupContent("Crossroads of Mississippi", {
+        physical: "Two adjacent tracts totaling 26.47 acres (9.9 acres & 16.57 acres)",
+        utilities: "Water, Sewer, Gas, Electric",
+        transport: "Direct access to I-20, I-55, Hwy 49 & Hwy 80"
+    }, 'https://jeffersonrowellproperties.com'));
 
     var pins = [pin1, pin2];
     map.on('zoomend', () => {
