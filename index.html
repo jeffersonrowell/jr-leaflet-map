@@ -104,7 +104,7 @@ Promise.all([
         "9.9 ac - Rankin": nickles,
         "16.57 ac - Rankin": broadhead,
         "10.39 ac - Rankin": holmes,
-        "Floodway": floodway
+
     };
 
     var layerControl = L.control.layers(baseMaps, overlayMaps, { collapsed: true }).addTo(map);
@@ -173,33 +173,43 @@ Promise.all([
 
     var pins = [pin1, pin2];
 
-    map.on('zoomend', () => {
-        const zoom = map.getZoom();
+  map.on('zoomend', () => {
+    const zoom = map.getZoom();
 
-     // Floodway checkbox visibility
-    document.querySelectorAll('.leaflet-control-layers-overlays label').forEach(label => {
-        if (label.textContent.trim().includes('Floodway')) {
-            label.style.display = zoom >= 17 ? 'block' : 'none';
-        }
-});
-
-// Floodway layer control
-if (zoom >= 17) {
-    if (!map.hasLayer(floodway)) map.addLayer(floodway);
-} else {
-    if (map.hasLayer(floodway)) map.removeLayer(floodway);
-}
-
-// Optional: pins logic
-pins.forEach(pin => {
+    // If zoomed in close enough, add Floodway and show in control
     if (zoom >= 17) {
-        map.removeLayer(pin);
-    } else {
-        map.addLayer(pin);
-    }
-});
+        if (!map.hasLayer(floodway)) map.addLayer(floodway);
 
+        // Add it to the layer control if not already there
+        if (!document.querySelector('.leaflet-control-layers-overlays label span.floodway-added')) {
+            layerControl.addOverlay(floodway, "Floodway");
+
+            // Mark the span for detection so we don't re-add
+            setTimeout(() => {
+                document.querySelectorAll('.leaflet-control-layers-overlays label span').forEach(label => {
+                    if (label.textContent.trim() === 'Floodway') {
+                        label.classList.add('floodway-added');
+                    }
+                });
+            }, 100);
+        }
+    } else {
+        if (map.hasLayer(floodway)) map.removeLayer(floodway);
+
+        // Hide Floodway checkbox from control if zoomed out
+        document.querySelectorAll('.leaflet-control-layers-overlays label').forEach(label => {
+            if (label.textContent.trim().includes('Floodway')) {
+                label.style.display = 'none';
+            }
+        });
+    }
+
+    // Pins
+    pins.forEach(pin => {
+        if (zoom >= 17) map.removeLayer(pin);
+        else map.addLayer(pin);
     });
+});
 
     map.whenReady(() => map.invalidateSize());
 });
