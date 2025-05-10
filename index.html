@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>JR Leaflet Map (Final Fixed)</title>
+    <title>JR Leaflet Map (Final Fixed with Combined Floodmap)</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
@@ -43,12 +43,11 @@ var esriTopo = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services
 L.control.fullscreen().addTo(map);
 
 Promise.all([
-    fetch('geojson/mississippi/rankin/floodway_4326.geojson').then(res => res.json()),
+    fetch('geojson/combined_floodzones.geojson').then(res => res.json()),
     fetch('geojson/mississippi/rankin/broadhead.geojson').then(res => res.json()),
     fetch('geojson/mississippi/rankin/holmes.geojson').then(res => res.json()),
-    fetch('geojson/mississippi/rankin/nickles.geojson').then(res => res.json()),
-    fetch('geojson/mississippi/rankin/nickles_broadhead.geojson').then(res => res.json())
-]).then(([floodwayData, broadheadData, holmesData, nicklesData, combinedData]) => {
+    fetch('geojson/mississippi/rankin/nickles.geojson').then(res => res.json())
+]).then(([floodData, broadheadData, holmesData, nicklesData]) => {
 
     function popupContent(title, details, link) {
         return `<div style="font-weight:bold; font-size:1.2em;">${title}</div>
@@ -58,7 +57,8 @@ Promise.all([
                 <br><br><a href="${link}" target="_blank">→ More</a>`;
     }
 
-    var floodway = L.geoJSON(floodwayData, { style: { color: '#3f93ba', weight: 0, fillOpacity: 0.4 } });
+    var floodLayer = L.geoJSON(floodData, { style: { color: '#3f93ba', weight: 1, fillOpacity: 0.4 } });
+
     var broadhead = L.geoJSON(broadheadData, {
         style: { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.15 },
         onEachFeature: (feature, layer) => layer.bindPopup(popupContent("16.57 ac - Rankin", {
@@ -67,6 +67,7 @@ Promise.all([
             transport: "Highway access, rail nearby"
         }, 'https://jeffersonrowellproperties.com'))
     });
+
     var holmes = L.geoJSON(holmesData, {
         style: { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.15 },
         onEachFeature: (feature, layer) => layer.bindPopup(popupContent("U.S. HW 49 Frontage", {
@@ -75,6 +76,7 @@ Promise.all([
             transport: "700+ feet frontage on U.S. Hwy 49"
         }, 'https://jeffersonrowellproperties.com'))
     });
+
     var nickles = L.geoJSON(nicklesData, {
         style: { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.15 },
         onEachFeature: (feature, layer) => layer.bindPopup(popupContent("9.9 ac - Rankin", {
@@ -83,22 +85,13 @@ Promise.all([
             transport: "Highway access, rail nearby"
         }, 'https://jeffersonrowellproperties.com'))
     });
-    var combined = L.geoJSON(combinedData, {
-        style: { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.15 },
-        onEachFeature: (feature, layer) => layer.bindPopup(popupContent("26.47 ac - Rankin", {
-            physical: "Size: 26.47 acres (9.9 + 16.57)<br>Zoning: Industrial",
-            utilities: "Water, Sewer, Gas, Electric",
-            transport: "Direct access to I-20, I-55, Hwy 49, Hwy 80"
-        }, 'https://jeffersonrowellproperties.com'))
-    });
 
     var baseMaps = { "Streets": streets, "Satellite": satellite, "Esri Topo": esriTopo };
     var overlayMaps = {
         "9.9 ac - Rankin": nickles,
         "16.57 ac - Rankin": broadhead,
-        "26.47 ac - Rankin": combined,
         "10.39 ac - Rankin": holmes,
-        "Floodway": floodway
+        "100-year Floodmap": floodLayer
     };
 
     var layerControl = L.control.layers(baseMaps, overlayMaps, { collapsed: true }).addTo(map);
@@ -109,12 +102,13 @@ Promise.all([
     map.addLayer(holmes);
 
     map.on('overlayadd', function(e) {
+        if (e.name === '100-year Floodmap') return; // skip floodmap toggle logic
         if (e.name === '26.47 ac - Rankin') {
             if (map.hasLayer(nickles)) { map.removeLayer(nickles); uncheckBox('9.9 ac - Rankin'); }
             if (map.hasLayer(broadhead)) { map.removeLayer(broadhead); uncheckBox('16.57 ac - Rankin'); }
         }
         if (e.name === '9.9 ac - Rankin' || e.name === '16.57 ac - Rankin') {
-            if (map.hasLayer(combined)) { map.removeLayer(combined); uncheckBox('26.47 ac - Rankin'); }
+            // intentionally skip combined layer logic (no 26.47 ac in control)
         }
     });
 
