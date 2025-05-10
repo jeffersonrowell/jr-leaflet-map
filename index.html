@@ -23,7 +23,15 @@
             color: inherit !important;
             cursor: pointer;
         }
-    </style>
+
+/* ✅ Mobile map height adjustment */
+@media (max-width: 768px) {
+    #map {
+        height: 66vh;
+    }
+}
+</style>
+
 </head>
 <body>
 <div id="map"></div>
@@ -190,37 +198,46 @@ Promise.all([
         else map.addLayer(pin);
     });
 
-    // Floodway: control visibility and dynamic panel logic
-    const floodwayExists = !![...document.querySelectorAll('.leaflet-control-layers-overlays label span')]
-        .find(el => el.textContent.trim() === 'Regulatory Floodway');
+    // Floodway layer visibility and checkbox control
+if (zoom >= 17) {
+    if (!map.hasLayer(floodway)) map.addLayer(floodway);
 
-    if (zoom >= 17) {
-        if (!map.hasLayer(floodway)) map.addLayer(floodway);
+    // Only add checkbox once when zoomed in
+    const checkboxExists = [...document.querySelectorAll('.leaflet-control-layers-overlays label span')]
+        .some(el => el.textContent.trim() === 'Regulatory Floodway');
 
-        if (!floodwayExists && zoom >= 17) {
-    layerControl.addOverlay(floodway, 'Regulatory Floodway');
+    if (!checkboxExists) {
+        layerControl.addOverlay(floodway, 'Regulatory Floodway');
 
-    setTimeout(() => {
+        setTimeout(() => {
+            document.querySelectorAll('.leaflet-control-layers-overlays label').forEach(label => {
+                if (label.textContent.trim().includes('Regulatory Floodway')) {
+                    label.style.display = 'block';
+                }
+            });
+        }, 100);
+    } else {
+        // Make sure it’s visible
         document.querySelectorAll('.leaflet-control-layers-overlays label').forEach(label => {
             if (label.textContent.trim().includes('Regulatory Floodway')) {
                 label.style.display = 'block';
             }
         });
-    }, 100);
+    }
+
+} else {
+    // Zoomed out — remove floodway and hide checkbox
+    if (map.hasLayer(floodway)) map.removeLayer(floodway);
+
+    document.querySelectorAll('.leaflet-control-layers-overlays label').forEach(label => {
+        if (label.textContent.trim().includes('Regulatory Floodway')) {
+            label.style.display = 'none';
+        }
+    });
 }
 
-    } else {
-        if (map.hasLayer(floodway)) map.removeLayer(floodway);
-
-        if (floodwayExists) {
-            document.querySelectorAll('.leaflet-control-layers-overlays label').forEach(label => {
-                if (label.textContent.trim().includes('Regulatory Floodway')) {
-                    label.style.display = 'none';
-                }
-            });
-        }
-        } // closes the "else" block for zoom < 17
-    }); // closes map.on('zoomend', ...)
+        
+}); // closes map.on('zoomend', ...)
 
 map.whenReady(() => map.invalidateSize());
 }); // closes Promise.all(...).then...)
