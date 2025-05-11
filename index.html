@@ -96,22 +96,17 @@ Promise.all([
     var layers = {
         "9.9 ac - Rankin": nickles,
         "16.57 ac - Rankin": broadhead,
-        "10.39 ac - Rankin": holmes
+        "10.39 ac - Rankin": holmes,
+        "Floodways": floodway
     };
 
     var baseMaps = { "Streets": streets, "Satellite": satellite, "Esri Topo": esriTopo };
-    var overlayMaps = {
-        "9.9 ac - Rankin": nickles,
-        "16.57 ac - Rankin": broadhead,
-        "10.39 ac - Rankin": holmes
-    };
+    var overlayMaps = { ...layers };
 
     var layerControl = L.control.layers(baseMaps, overlayMaps, { collapsed: true }).addTo(map);
     L.control.scale({ position: 'bottomleft', imperial: true, metric: false }).addTo(map);
 
-    map.addLayer(nickles);
-    map.addLayer(broadhead);
-    map.addLayer(holmes);
+    Object.values(layers).forEach(layer => map.addLayer(layer));
 
     var combinedBounds = nickles.getBounds().extend(broadhead.getBounds());
 
@@ -142,7 +137,6 @@ Promise.all([
 
                     if (targetBounds) {
                         map.flyToBounds(targetBounds, { maxZoom: 16.5 });
-                        map.once('moveend', updateFloodwaysControl);
                     }
                 }
             });
@@ -171,47 +165,11 @@ Promise.all([
 
     var pins = [pin1, pin2];
 
-    function updateFloodwaysControl() {
-        const zoom = map.getZoom();
-        const labelText = 'Floodways';
-
-        layerControl.removeLayer(floodway);
-
-        if (zoom >= 16.5) {
-            layerControl.addOverlay(floodway, labelText);
-
-            setTimeout(() => {
-                const floodLabel = [...document.querySelectorAll('.leaflet-control-layers-overlays label')]
-                    .find(label => label.textContent.trim().includes(labelText));
-
-                if (floodLabel) {
-                    floodLabel.style.display = 'block';
-
-                    const input = floodLabel.querySelector('input[type="checkbox"]');
-                    if (input) {
-                        input.addEventListener('click', e => {
-                            e.stopPropagation();
-                        });
-                    }
-                }
-            }, 150);
-        } else {
-            if (map.hasLayer(floodway)) map.removeLayer(floodway);
-
-            const floodLabel = [...document.querySelectorAll('.leaflet-control-layers-overlays label')]
-                .find(label => label.textContent.trim().includes(labelText));
-
-            if (floodLabel) floodLabel.style.display = 'none';
-        }
-    }
-
     map.on('zoomend', () => {
         pins.forEach(pin => {
             if (map.getZoom() >= 17) map.removeLayer(pin);
             else map.addLayer(pin);
         });
-
-        updateFloodwaysControl();
     });
 
     map.whenReady(() => map.invalidateSize());
