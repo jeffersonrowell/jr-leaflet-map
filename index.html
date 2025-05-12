@@ -62,11 +62,21 @@ Promise.all([
     var floodway = L.geoJSON(floodwayData, { style: { color: '#3f93ba', weight: 1.5, fillOpacity: 0.4 } });
 
     function siteStyle() {
-        var isSatellite = map.hasLayer(satellite);
-        return isSatellite
-            ? { color: '#8B0000', weight: 4, fillOpacity: 0 }
-            : { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.15 };
+    var isSatellite = map.hasLayer(satellite);
+    return isSatellite
+        ? {
+            color: '#8B0000',   // Red outline
+            weight: 2.5,        // Slightly thicker than 1pt
+            fillOpacity: 0      // No fill on satellite
+        }
+        : {
+            color: '#999',                // Gray outline
+            weight: 1,                    // Standard line
+            fillColor: '#ffff66',         // Soft yellow fill
+            fillOpacity: 0.15
+        };
     }
+
 
     var broadhead = L.geoJSON(broadheadData, {
         style: siteStyle,
@@ -74,7 +84,7 @@ Promise.all([
             physical: "Size: 16.57 acres<br>Zoning: Industrial",
             utilities: "Water, Sewer, Gas, Electric",
             transport: "Highway access, rail nearby"
-        }, 'https://jeffersonrowellproperties.com'))
+        }, 'https://jeffersonrowellproperties.com/Crossroads-of-MS-1'))
     });
     var holmes = L.geoJSON(holmesData, {
         style: siteStyle,
@@ -82,7 +92,7 @@ Promise.all([
             physical: "10.39 acres of undeveloped commercial land",
             utilities: "Water, Sewer, Gas, Electric",
             transport: "700+ feet frontage on U.S. Hwy 49"
-        }, 'https://jeffersonrowellproperties.com'))
+        }, 'https://jeffersonrowellproperties.com/HW-49-Florence-1'))
     });
     var nickles = L.geoJSON(nicklesData, {
         style: siteStyle,
@@ -90,7 +100,7 @@ Promise.all([
             physical: "Size: 9.9 acres<br>Zoning: Industrial",
             utilities: "Water, Sewer, Gas, Electric",
             transport: "Highway access, rail nearby"
-        }, 'https://jeffersonrowellproperties.com'))
+        }, 'https://jeffersonrowellproperties.com/Crossroads-of-MS-1'))
     });
 
     var layers = {
@@ -106,7 +116,11 @@ Promise.all([
     var layerControl = L.control.layers(baseMaps, overlayMaps, { collapsed: true }).addTo(map);
     L.control.scale({ position: 'bottomleft', imperial: true, metric: false }).addTo(map);
 
-    Object.values(layers).forEach(layer => map.addLayer(layer));
+    map.addLayer(broadhead);
+    map.addLayer(holmes);
+    map.addLayer(nickles);
+    // Leave floodway out so its checkbox is unchecked by default
+
 
     var combinedBounds = nickles.getBounds().extend(broadhead.getBounds());
 
@@ -129,14 +143,13 @@ Promise.all([
 
                     if (name === '16.57 ac - Rankin' || name === '9.9 ac - Rankin') {
                         targetBounds = combinedBounds;
+                        map.flyToBounds(targetBounds, { maxZoom: 16 }); // Zooms to ~500 ft
                     } else if (name === '10.39 ac - Rankin') {
                         targetBounds = holmes.getBounds();
+                        map.flyToBounds(targetBounds, { maxZoom: 16.5 }); // Keep closer zoom
                     } else if (layers[name]) {
                         targetBounds = layers[name].getBounds();
-                    }
-
-                    if (targetBounds) {
-                        map.flyToBounds(targetBounds, { maxZoom: 16.5 });
+                        map.flyToBounds(targetBounds, { maxZoom: 16 }); // General default for others
                     }
                 }
             });
