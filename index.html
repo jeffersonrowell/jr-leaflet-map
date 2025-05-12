@@ -119,6 +119,18 @@ Promise.all([
     map.addLayer(broadhead);
     map.addLayer(holmes);
     map.addLayer(nickles);
+
+    map.on('baselayerchange', function (e) {
+    const isSatellite = map.hasLayer(satellite);
+    const style = isSatellite
+        ? { color: '#8B0000', weight: 2.5, fillOpacity: 0 }
+        : { color: '#999', weight: 1, fillColor: '#ffff66', fillOpacity: 0.15 };
+
+    broadhead.setStyle(style);
+    holmes.setStyle(style);
+    nickles.setStyle(style);
+});
+
     // Leave floodway out so its checkbox is unchecked by default
 
 
